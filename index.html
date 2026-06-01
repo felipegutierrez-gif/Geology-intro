@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solid Solutions — An Interactive Geology Chapter</title>
+<style>
+  :root{
+    --bg:#0d1117; --bg2:#161b22; --panel:#1c2330; --panel2:#222b3a;
+    --line:#2d3748; --text:#e6edf3; --muted:#9fb0c3; --dim:#6b7c93;
+    --accent:#5ed6c4; --accent2:#7aa2ff; --warn:#ffb454; --hot:#ff6b6b;
+    --green:#7bdc8b; --mg:#6fd0c0; --fe:#e8915a; --plain:#243b3a;
+    --shadow:0 8px 30px rgba(0,0,0,.45);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:radial-gradient(1200px 800px at 70% -10%,#16203180,transparent),var(--bg);
+    color:var(--text); font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent2);text-decoration:none}
+  h1,h2,h3{line-height:1.2;letter-spacing:-.02em}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+  code,.f{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+
+  /* ---- Header / hero ---- */
+  header.hero{padding:64px 0 36px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+  .kicker{color:var(--accent);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:13px}
+  header.hero h1{font-size:clamp(30px,6vw,52px);margin:.25em 0 .15em;
+    background:linear-gradient(90deg,#fff,#a9c6ff 60%,#5ed6c4);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header.hero p{color:var(--muted);font-size:18px;max-width:640px}
+
+  /* ---- Sticky nav ---- */
+  nav.toc{position:sticky;top:0;z-index:50;background:#0d1117e6;backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);}
+  nav.toc .inner{display:flex;gap:6px;overflow-x:auto;padding:10px 20px;max-width:1000px;margin:0 auto;-ms-overflow-style:none;scrollbar-width:none}
+  nav.toc .inner::-webkit-scrollbar{display:none}
+  nav.toc a{white-space:nowrap;color:var(--muted);font-size:14px;font-weight:500;padding:7px 13px;border-radius:999px;transition:.2s}
+  nav.toc a:hover{color:var(--text);background:var(--panel)}
+  nav.toc a.active{color:#0d1117;background:var(--accent)}
+
+  section{padding:54px 0;border-bottom:1px solid var(--line)}
+  section h2{font-size:clamp(24px,4vw,34px);margin:0 0 6px}
+  .lead{color:var(--muted);font-size:18px;margin:0 0 28px;max-width:680px}
+  .num{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;
+    background:var(--panel);color:var(--accent);font-weight:700;margin-right:12px;border:1px solid var(--line);font-size:16px}
+
+  /* ---- Plain English box ---- */
+  .plain{background:linear-gradient(180deg,#1a2a29,#16201f);border:1px solid #2c4a47;border-left:4px solid var(--accent);
+    border-radius:12px;padding:16px 18px;margin:18px 0}
+  .plain .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  .plain p{margin:0;color:#d6f0ec}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+  .grid{display:grid;gap:18px}
+  @media(min-width:720px){.grid.two{grid-template-columns:1fr 1fr}}
+
+  /* ---- analogy spectrum ---- */
+  .spectrum{margin:24px 0}
+  .spectrum .bar{height:54px;border-radius:12px;position:relative;
+    background:linear-gradient(90deg,var(--mg),#5b8f86 50%,var(--fe));border:1px solid var(--line)}
+  .spectrum .ends{display:flex;justify-content:space-between;margin-top:10px;font-size:14px;color:var(--muted)}
+  .spectrum .ends b{color:var(--text);display:block}
+  .spectrum .mid{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-weight:600;color:#0d1117;font-size:14px;text-shadow:0 1px 2px #ffffff55}
+
+  /* ---- Interactive slider lab ---- */
+  .lab{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+  .seriesTabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .seriesTabs button{background:var(--bg2);color:var(--muted);border:1px solid var(--line);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:600;transition:.18s}
+  .seriesTabs button:hover{color:var(--text);border-color:var(--accent)}
+  .seriesTabs button.on{background:var(--accent);color:#0d1117;border-color:var(--accent)}
+  .labGrid{display:grid;gap:22px}
+  @media(min-width:760px){.labGrid{grid-template-columns:1.1fr .9fr}}
+  .swatch{height:120px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:flex-end;padding:12px;font-weight:600;transition:background .15s;position:relative;overflow:hidden}
+  .swatch .crys{position:absolute;inset:0;opacity:.22;background-size:18px 18px;
+    background-image:linear-gradient(45deg,#fff 1px,transparent 1px),linear-gradient(-45deg,#fff 1px,transparent 1px)}
+  .compReadout{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 4px}
+  .compReadout .name{font-size:20px;font-weight:700}
+  .compReadout .pct{font-family:"SF Mono",monospace;color:var(--accent)}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:8px;border-radius:999px;
+    background:linear-gradient(90deg,var(--mg),var(--fe));outline:none;margin:10px 0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;
+    background:#fff;border:3px solid var(--accent);cursor:pointer;box-shadow:0 2px 8px #0008}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--accent);cursor:pointer}
+  .endlabels{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+  .endlabels b{color:var(--text)}
+  .props{list-style:none;padding:0;margin:6px 0 0}
+  .props li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:15px}
+  .props li:last-child{border:0}
+  .props .k{color:var(--muted)}
+  .props .v{font-weight:600;text-align:right}
+  .formula{font-family:"SF Mono",monospace;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:14px;color:var(--accent)}
+  .sub{font-size:13px;color:var(--muted);margin-top:10px}
+  .sub .swap{color:var(--warn);font-weight:600}
+
+  /* ---- expandable definition chips ---- */
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+  .chip{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:0;cursor:pointer;overflow:hidden;transition:.2s;flex:1 1 200px}
+  .chip summary{list-style:none;padding:13px 15px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+  .chip summary::-webkit-details-marker{display:none}
+  .chip summary .pl{color:var(--accent);transition:.2s}
+  .chip[open] summary .pl{transform:rotate(45deg)}
+  .chip .body{padding:0 15px 14px;color:var(--muted);font-size:14px}
+  .chip[open]{border-color:var(--accent)}
+
+  /* ---- rocks interactive ---- */
+  .rockLayout{display:grid;gap:18px}
+  @media(min-width:760px){.rockLayout{grid-template-columns:260px 1fr}}
+  .mineralList{display:flex;flex-direction:column;gap:8px}
+  .mineralList button{text-align:left;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;transition:.16s;display:flex;align-items:center;gap:10px;font-size:15px}
+  .mineralList button:hover{border-color:var(--accent)}
+  .mineralList button.on{background:var(--panel2);border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+  .dot{width:14px;height:14px;border-radius:4px;flex:none}
+  .rockPanel{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:20px;min-height:230px}
+  .rockPanel h3{margin:0 0 4px;font-size:22px}
+  .rockPanel .formula{display:inline-block}
+  .rockChips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .rockChips .r{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:14px}
+  .rockChips .r b{display:block;color:var(--accent2)}
+  .rockChips .r span{color:var(--muted);font-size:12.5px}
+
+  /* ---- tooltip ---- */
+  .tip{border-bottom:1px dotted var(--accent);cursor:help;position:relative}
+  .tip:hover::after,.tip.show::after{content:attr(data-tip);position:absolute;left:50%;bottom:135%;transform:translateX(-50%);
+    background:#000e;color:#fff;border:1px solid var(--accent);padding:8px 11px;border-radius:8px;font-size:12.5px;
+    white-space:normal;width:230px;max-width:78vw;z-index:80;box-shadow:var(--shadow);font-weight:400;line-height:1.45}
+  .tip:hover::before,.tip.show::before{content:"";position:absolute;left:50%;bottom:125%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--accent);z-index:80}
+
+  /* ---- Earth diagram ---- */
+  .earthWrap{display:grid;gap:20px}
+  @media(min-width:820px){.earthWrap{grid-template-columns:420px 1fr}}
+  .earthSvg{width:100%;height:auto;display:block;cursor:pointer}
+  .layerInfo{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px;min-height:230px}
+  .layerInfo h3{margin:0 0 2px}
+  .layerInfo .pt{display:flex;gap:18px;margin:10px 0 14px;flex-wrap:wrap}
+  .layerInfo .pt div{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px}
+  .layerInfo .pt b{display:block;color:var(--accent);font-size:16px}
+  .mini{font-size:13px;color:var(--dim);margin-top:8px}
+  .earthLegend{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .earthLegend span{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .earthLegend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+  /* ---- Bowen ---- */
+  .bowenWrap{display:grid;gap:20px}
+  @media(min-width:820px){.bowenWrap{grid-template-columns:1fr 320px}}
+  .bowenSvg{width:100%;height:auto}
+  .bnode{cursor:pointer;transition:.15s}
+  .bowenInfo{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px;min-height:200px}
+  .bowenInfo h3{margin:0 0 6px}
+  .tempScale{font-size:12px;fill:var(--muted)}
+  /* ---- ch6 mineral recipe bars ---- */
+  .recipe{list-style:none;padding:0;margin:14px 0 0}
+  .recipe li{margin-bottom:12px}
+  .recipe .top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px}
+  .recipe .top b{font-weight:600}
+  .recipe .top span{color:var(--muted);font-family:"SF Mono",monospace}
+  .recipe .track{height:12px;border-radius:999px;background:var(--bg);overflow:hidden;border:1px solid var(--line)}
+  .recipe .fill{height:100%;border-radius:999px;transition:width .5s ease}
+
+  /* ---- ch7 cooling ---- */
+  .coolWrap{display:grid;gap:20px}
+  @media(min-width:820px){.coolWrap{grid-template-columns:420px 1fr}}
+  .coolSvg{width:100%;height:auto;display:block}
+  .coolTabs{display:flex;flex-wrap:wrap;gap:8px}
+  .coolTabs button{background:var(--bg2);color:var(--muted);border:1px solid var(--line);padding:8px 13px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:600;transition:.16s}
+  .coolTabs button:hover{color:var(--text);border-color:var(--accent)}
+  .coolTabs button.on{background:var(--accent);color:#0d1117;border-color:var(--accent)}
+  .coolLegend{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px}
+  .coolLegend span{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .coolLegend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .envBadge{display:inline-block;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.05em;margin-bottom:4px}
+  .env-ex{background:#3a1f17;color:#ff9270}
+  .env-in{background:#2a2419;color:#e0b06a}
+  .pill{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:12.5px;color:var(--muted);margin:4px 6px 0 0}
+  .pill b{color:var(--text)}
+
+  /* ---- ch8 rock cycle ---- */
+  .cycleWrap{display:grid;gap:20px}
+  @media(min-width:820px){.cycleWrap{grid-template-columns:420px 1fr}}
+  .cycleSvg{width:100%;height:auto;display:block}
+  .cnode{cursor:pointer}
+  .cycleInfo{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px;min-height:200px}
+  .cycleInfo h3{margin:0 0 6px}
+
+  /* ---- ch9 uses ---- */
+  .useChips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .useChips .u{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:14px;flex:1 1 200px}
+  .useChips .u b{display:block;color:var(--accent2);margin-bottom:3px}
+  .useChips .u span{color:var(--muted);font-size:12.5px}
+  .keyUse{background:linear-gradient(180deg,#1a2a29,#16201f);border:1px solid #2c4a47;border-left:4px solid var(--accent);border-radius:10px;padding:12px 15px;margin-top:14px}
+  .keyUse .tag{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+  .keyUse p{margin:0;color:#d6f0ec}
+
+  /* ---- ch10 gemstones ---- */
+  .gemGrid{display:grid;gap:16px;margin-top:8px}
+  @media(min-width:640px){.gemGrid{grid-template-columns:1fr 1fr}}
+  @media(min-width:920px){.gemGrid{grid-template-columns:1fr 1fr 1fr}}
+  .gem{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);transition:.18s;cursor:pointer}
+  .gem:hover{transform:translateY(-3px);border-color:var(--accent)}
+  .gem .crown{height:90px;display:flex;align-items:center;justify-content:center;position:relative}
+  .gem .crown svg{width:64px;height:64px;filter:drop-shadow(0 4px 10px #0007)}
+  .gem .meta{padding:14px 16px}
+  .gem .meta h3{margin:0;font-size:19px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .gem .meta .from{color:var(--muted);font-size:13px;margin-top:2px}
+  .gem .meta .from b{color:var(--text)}
+  .gem .price{font-family:"SF Mono",monospace;font-size:13px;color:var(--accent);white-space:nowrap}
+  .gem .more{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .gem.open .more{max-height:260px}
+  .gem .more .inner{padding-top:10px;border-top:1px dashed var(--line);margin-top:10px;color:var(--muted);font-size:13.5px}
+  .gem .more .row{display:flex;gap:8px;margin-top:7px}
+  .gem .more .row b{color:var(--accent2);min-width:74px;flex:none}
+  .gem .tap{font-size:11px;color:var(--dim);font-style:italic;margin-top:8px}
+
+  /* ---- real-world photo thumbnails (with CSS texture fallback) ---- */
+  .thumb{position:relative;height:160px;border-radius:12px;overflow:hidden;border:1px solid var(--line);
+    margin-top:14px;background:linear-gradient(135deg,var(--t1,#555),var(--t2,#222))}
+  .thumb.sm{height:96px;margin-top:10px}
+  .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:3}
+  .thumb .cap{position:absolute;left:0;right:0;bottom:0;z-index:4;font-size:10.5px;letter-spacing:.04em;
+    color:#fff;background:linear-gradient(0deg,#000b,transparent);padding:14px 10px 5px;text-align:right;text-transform:uppercase;opacity:.85}
+  /* texture overlays (show when no photo loads) */
+  .thumb::before,.thumb::after{content:"";position:absolute;inset:0;z-index:1}
+  .tex-cryst::before{background:
+    linear-gradient(125deg,#ffffff44 0 8%,transparent 8% 18%,#ffffff22 18% 24%,transparent 24% 40%),
+    linear-gradient(60deg,#00000033 0 12%,transparent 12% 30%,#ffffff22 30% 36%,transparent 36%)}
+  .tex-speck::before{background-image:radial-gradient(#ffffff66 1.4px,transparent 1.6px),radial-gradient(#00000055 1.4px,transparent 1.6px),radial-gradient(#ffffff33 1px,transparent 1.2px);
+    background-size:16px 16px,22px 22px,11px 11px;background-position:0 0,8px 11px,4px 6px}
+  .tex-grain::before{background-image:radial-gradient(#ffffff22 .8px,transparent 1px),radial-gradient(#00000044 .8px,transparent 1px);
+    background-size:7px 7px,9px 9px;background-position:0 0,3px 4px}
+  .tex-layer::before{background:repeating-linear-gradient(8deg,#00000033 0 6px,#ffffff14 6px 9px,transparent 9px 18px)}
+  .tex-band::before{background:repeating-linear-gradient(118deg,#ffffff33 0 7px,#00000044 7px 13px,#ffffff14 13px 22px)}
+  .tex-glass::before{background:radial-gradient(120px 80px at 35% 25%,#ffffff55,transparent 60%),linear-gradient(135deg,#ffffff10,transparent)}
+  .tex-glass::after{background:linear-gradient(115deg,transparent 40%,#ffffff33 47%,transparent 52%)}
+  .tex-vein::before{background:
+    radial-gradient(80px 40px at 25% 30%,#ffffff66,transparent 70%),
+    radial-gradient(60px 30px at 70% 65%,#ffffff44,transparent 70%);
+    transform:rotate(-6deg) scale(1.3)}
+  .tex-facet::before{background:conic-gradient(from 45deg at 50% 50%,#ffffff55,transparent 25%,#ffffff33 50%,transparent 75%,#ffffff55)}
+
+  /* gem photo over the faceted SVG fallback */
+  .gem .crown{position:relative}
+  .gem .crown img.gemimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:3}
+
+  /* ---- glossary inline tooltips (tap or hover) ---- */
+  .gloss{border-bottom:1px dotted var(--warn);cursor:help;color:inherit}
+
+  /* ---- ch11 plate tectonics ---- */
+  .tectWrap{display:grid;gap:20px}
+  @media(min-width:900px){.tectWrap{grid-template-columns:1fr 320px}}
+  .mapBox{background:#0a1422;border:1px solid var(--line);border-radius:14px;padding:10px;overflow:hidden}
+  .tectSvg{width:100%;height:auto;display:block;border-radius:8px}
+  .plate{cursor:pointer;transition:.15s}
+  .plate:hover{filter:brightness(1.2)}
+  .bnd{cursor:pointer}
+  .tectInfo{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px;min-height:240px}
+  .tectInfo h3{margin:0 0 4px}
+  .tectLegend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px}
+  .tectLegend span{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .tectLegend i{width:22px;height:0;border-top-width:3px;border-top-style:solid;display:inline-block}
+  .tFilters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+  .tFilters button{background:var(--bg2);color:var(--muted);border:1px solid var(--line);padding:7px 12px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:600;transition:.16s}
+  .tFilters button:hover{color:var(--text);border-color:var(--accent)}
+  .tFilters button.on{background:var(--accent);color:#0d1117;border-color:var(--accent)}
+  .bType{display:inline-block;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.04em;margin-bottom:6px}
+  .bt-div{background:#16302a;color:#5ed6c4}
+  .bt-con{background:#3a1f17;color:#ff9270}
+  .bt-tra{background:#2a2742;color:#b9a7ff}
+  .factGrid{display:grid;gap:12px;margin-top:16px}
+  @media(min-width:640px){.factGrid{grid-template-columns:1fr 1fr}}
+  .factCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .factCard h4{margin:0 0 5px;font-size:15px;color:var(--accent2)}
+  .factCard p{margin:0;color:var(--muted);font-size:13.5px}
+  .arrowKey{font-size:12px;color:var(--dim);margin-top:6px}
+
+  /* ---- ch12 mineral reference table ---- */
+  .tableTools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+  .tableTools input{flex:1 1 200px;background:var(--bg2);border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:10px 13px;font-size:14px;outline:none}
+  .tableTools input:focus{border-color:var(--accent)}
+  .tableTools .count{font-size:13px;color:var(--dim);white-space:nowrap}
+  .tableScroll{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel);
+    -webkit-overflow-scrolling:touch;position:relative}
+  table.mtab{border-collapse:separate;border-spacing:0;width:100%;min-width:860px;font-size:13.5px}
+  table.mtab thead th{position:sticky;top:0;z-index:5;background:#1b2433;color:var(--accent);text-align:left;
+    padding:13px 14px;font-weight:700;font-size:12.5px;letter-spacing:.03em;border-bottom:2px solid var(--line);cursor:pointer;white-space:nowrap}
+  table.mtab thead th:hover{color:#fff}
+  /* freeze first (Mineral) column horizontally */
+  table.mtab th:first-child,table.mtab td:first-child{position:sticky;left:0;z-index:4;box-shadow:1px 0 0 var(--line)}
+  table.mtab td:first-child{background:var(--panel)}
+  table.mtab tbody tr:hover td:first-child{background:var(--panel2)}
+  table.mtab thead th:first-child{z-index:6;background:#1b2433}
+  table.mtab thead th .ar{opacity:.4;font-size:10px;margin-left:3px}
+  table.mtab thead th.sorted .ar{opacity:1}
+  table.mtab tbody td{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--muted);vertical-align:top}
+  table.mtab tbody tr:hover td{background:var(--panel2)}
+  table.mtab tbody tr:last-child td{border-bottom:0}
+  table.mtab td .mname{color:var(--text);font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap}
+  table.mtab td .mname .dot{width:12px;height:12px;border-radius:4px;flex:none}
+  table.mtab td .f{color:var(--accent);font-size:12.5px}
+  .abund{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .abund .barwrap{width:54px;height:7px;border-radius:999px;background:var(--bg);overflow:hidden;border:1px solid var(--line)}
+  .abund .barfill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+  .tableHint{font-size:12.5px;color:var(--dim);font-style:italic;margin-top:8px}
+
+  .footer{padding:40px 0 70px;color:var(--dim);font-size:14px;text-align:center}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.05em}
+  .b-mafic{background:#3b2a1f;color:var(--fe)}
+  .b-felsic{background:#26303f;color:var(--accent2)}
+  .hint{font-size:13px;color:var(--dim);font-style:italic;margin-top:6px}
+  ::selection{background:var(--accent);color:#0d1117}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Interactive Geology · Chapter</div>
+    <h1>Solid Solutions in Minerals</h1>
+    <p>A hands-on tour of how minerals blend chemistries, the rocks they build, where in the Earth they form, and the order they crystallize from cooling magma. Slide, hover, and click to build intuition.</p>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="inner">
+    <a href="#s1">1 · What is it?</a>
+    <a href="#s2">2 · The series</a>
+    <a href="#s3">3 · Minerals → rocks</a>
+    <a href="#s4">4 · Inside the Earth</a>
+    <a href="#s5">5 · Bowen's series</a>
+    <a href="#s6">6 · Rock → minerals</a>
+    <a href="#s7">7 · How it cooled</a>
+    <a href="#s8">8 · Metamorphic &amp; sedimentary</a>
+    <a href="#s9">9 · What's it useful for?</a>
+    <a href="#s10">10 · Gemstones</a>
+    <a href="#s11">11 · Plate tectonics</a>
+    <a href="#s12">12 · Mineral table</a>
+  </div>
+</nav>
+
+<!-- ============ 1 ============ -->
+<section id="s1" class="wrap">
+  <h2><span class="num">1</span>What is a solid solution?</h2>
+  <p class="lead">A mineral whose chemical recipe isn't fixed — it can swap one ingredient for a similar one across a continuous range, while keeping the same crystal structure.</p>
+
+  <div class="plain">
+    <span class="tag">Plain English</span>
+    <p>Think of coffee. Pure black coffee and a fully sweetened coffee are the "end-members." You can dial sugar anywhere in between — same cup, same drink, just a different blend. A solid solution is the same idea in a crystal: the atomic "scaffolding" stays put, but interchangeable atoms (say magnesium vs. iron) sit in the same seats in any ratio. The mineral is one continuous family, not separate species.</p>
+  </div>
+
+  <div class="grid two" style="margin-top:8px">
+    <div class="card">
+      <h3 style="margin-top:0">The rule that makes it work</h3>
+      <p style="color:var(--muted)">Two atoms can substitute freely when they have <b style="color:var(--text)">similar size and similar charge</b>. Mg²⁺ and Fe²⁺ are nearly the same size and identical charge, so they trade places effortlessly in olivine and pyroxene. When the swap requires balancing charge, a <span class="tip" data-tip="A paired swap: two atoms change at once so total charge stays neutral. e.g. Na⁺+Si⁴⁺ ⇄ Ca²⁺+Al³⁺ in plagioclase.">coupled substitution</span> kicks in.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">End-members vs. intermediates</h3>
+      <p style="color:var(--muted)">The two pure extremes are <b style="color:var(--text)">end-members</b>; everything between is an <b style="color:var(--text)">intermediate composition</b>. Named varieties (like the olive-green gem peridot) are just intermediates given their own labels. Properties — color, density, melting point — shift smoothly as you move along the range.</p>
+    </div>
+  </div>
+
+  <div class="spectrum">
+    <div class="bar">
+      <div class="mid">intermediate compositions →</div>
+    </div>
+    <div class="ends">
+      <div><b>Forsterite</b><span class="f">Mg₂SiO₄ · pure Mg</span></div>
+      <div style="text-align:right"><b>Fayalite</b><span class="f">Fe₂SiO₄ · pure Fe</span></div>
+    </div>
+    <p class="hint">The olivine family — the classic textbook solid solution. Try the slider in the next section.</p>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2" class="wrap">
+  <h2><span class="num">2</span>The main solid-solution series</h2>
+  <p class="lead">Pick a series, then drag the slider to morph between its end-members and watch the chemistry and physical properties change in real time.</p>
+
+  <div class="lab">
+    <div class="seriesTabs" id="seriesTabs"></div>
+    <div class="labGrid">
+      <div>
+        <div class="swatch" id="swatch"><div class="crys"></div><span id="swatchLabel"></span></div>
+        <div class="compReadout">
+          <span class="name" id="varName"></span>
+          <span class="pct" id="pctReadout"></span>
+        </div>
+        <input type="range" id="comp" min="0" max="100" value="50">
+        <div class="endlabels">
+          <span><b id="endL"></b><br><span class="f" id="endLf"></span></span>
+          <span style="text-align:right"><b id="endR"></b><br><span class="f" id="endRf"></span></span>
+        </div>
+        <div class="formula" id="liveFormula"></div>
+        <div class="sub" id="subText"></div>
+        <div id="seriesThumb"></div>
+      </div>
+      <div>
+        <ul class="props" id="propList"></ul>
+        <div class="plain" style="margin-bottom:0">
+          <span class="tag">Plain English</span>
+          <p id="seriesPlain"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin:30px 0 6px">Quick reference — every series at a glance</h3>
+  <div class="chips" id="seriesChips"></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3" class="wrap">
+  <h2><span class="num">3</span>Which minerals build which rocks?</h2>
+  <p class="lead">Click a mineral to see the igneous rocks it dominates — and what it pairs with.</p>
+  <div class="rockLayout">
+    <div class="mineralList" id="mineralList"></div>
+    <div class="rockPanel" id="rockPanel"></div>
+  </div>
+  <div class="plain">
+    <span class="tag">Plain English</span>
+    <p>Rocks are mineral mixtures. The recipe of minerals decides the rock's name. Lots of olivine and pyroxene, no quartz → dark, dense rocks from deep down (peridotite, basalt). Lots of quartz and K-feldspar → pale, light rocks from the crust (granite). Same minerals, different cooling speed, just changes the crystal size: basalt (fast, fine) vs. gabbro (slow, coarse).</p>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4" class="wrap">
+  <h2><span class="num">4</span>Where in the Earth do they form?</h2>
+  <p class="lead">Click a layer of the cross-section to see which minerals and rocks live there, and the temperature &amp; pressure that rule them.</p>
+  <div class="earthWrap">
+    <div>
+      <svg class="earthSvg" id="earthSvg" viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Earth cross section">
+        <defs>
+          <radialGradient id="gCrust" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#3a5">  </stop><stop offset="100%" stop-color="#2f7d5b"/></radialGradient>
+          <radialGradient id="gMantle" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#d97a3c"/><stop offset="100%" stop-color="#a4502a"/></radialGradient>
+          <radialGradient id="gOuter" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffd166"/><stop offset="100%" stop-color="#f0932b"/></radialGradient>
+          <radialGradient id="gInner" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff3c4"/><stop offset="100%" stop-color="#ffd166"/></radialGradient>
+        </defs>
+        <circle class="elayer" data-layer="crust"  cx="210" cy="210" r="200" fill="url(#gCrust)"  stroke="#0d1117" stroke-width="2"/>
+        <circle class="elayer" data-layer="mantle" cx="210" cy="210" r="170" fill="url(#gMantle)" stroke="#0d1117" stroke-width="2"/>
+        <circle class="elayer" data-layer="outer"  cx="210" cy="210" r="92"  fill="url(#gOuter)"  stroke="#0d1117" stroke-width="2"/>
+        <circle class="elayer" data-layer="inner"  cx="210" cy="210" r="46"  fill="url(#gInner)"  stroke="#0d1117" stroke-width="2"/>
+        <text x="210" y="26" text-anchor="middle" font-size="12" fill="#eafff4" font-weight="700">Crust</text>
+        <text x="210" y="64" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">Mantle</text>
+        <text x="210" y="138" text-anchor="middle" font-size="11" fill="#3a2a12" font-weight="700">Outer core</text>
+        <text x="210" y="214" text-anchor="middle" font-size="10" fill="#3a2a12" font-weight="700">Inner</text>
+        <g id="ering"></g>
+      </svg>
+      <div class="earthLegend">
+        <span><i style="background:#2f7d5b"></i>Crust</span>
+        <span><i style="background:#a4502a"></i>Mantle</span>
+        <span><i style="background:#f0932b"></i>Outer core</span>
+        <span><i style="background:#ffd166"></i>Inner core</span>
+      </div>
+      <p class="hint">Cores are iron–nickel metal — no silicate minerals. The silicate solid solutions of this chapter live in the mantle and crust.</p>
+    </div>
+    <div class="layerInfo" id="layerInfo"></div>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5" class="wrap">
+  <h2><span class="num">5</span>Bowen's Reaction Series</h2>
+  <p class="lead">The order minerals crystallize as magma cools — from hot &amp; mafic at the top to cool &amp; felsic at the bottom. Click any mineral.</p>
+  <div class="bowenWrap">
+    <div>
+      <svg class="bowenSvg" id="bowenSvg" viewBox="0 0 520 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bowen's reaction series"></svg>
+    </div>
+    <div>
+      <div class="bowenInfo" id="bowenInfo"></div>
+      <div class="plain" style="margin-top:16px;margin-bottom:0">
+        <span class="tag">Plain English</span>
+        <p>As magma cools, minerals crystallize in a predictable order. The left branch is <b>discontinuous</b> — each mineral reacts with the melt and converts to the next (olivine→pyroxene→amphibole→biotite). The right branch is <b>continuous</b> — plagioclase just gradually shifts from Ca-rich to Na-rich (a solid solution!). The two branches meet at the bottom, where the last, coolest, most silica-rich minerals form: K-feldspar, muscovite, and finally quartz.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6" class="wrap">
+  <h2><span class="num">6</span>Pick a rock → see its minerals</h2>
+  <p class="lead">The reverse lookup of Chapter 3. Choose a rock and see the mineral recipe that defines it, with each mineral's share shown as a bar.</p>
+  <div class="rockLayout">
+    <div class="mineralList" id="rmList"></div>
+    <div class="rockPanel" id="rmPanel"></div>
+  </div>
+  <div class="plain">
+    <span class="tag">Plain English</span>
+    <p>A rock's name is really a recipe. Geologists identify a rock by figuring out which minerals it contains and in what proportions. Quartz + K-feldspar means granite; pyroxene + Ca-plagioclase with no quartz means basalt or gabbro. Learn the recipes and you can name most igneous rocks by eye.</p>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7" class="wrap">
+  <h2><span class="num">7</span>How did it cool — outside or inside the Earth?</h2>
+  <p class="lead">Pick a rock to find out whether it cooled fast at the surface in contact with air/water (extrusive / volcanic) or slowly trapped inside the crust (intrusive / plutonic) — and how to tell from the crystals.</p>
+
+  <div class="coolWrap">
+    <div class="coolScene">
+      <svg class="coolSvg" id="coolSvg" viewBox="0 0 420 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Volcano cross-section showing cooling environments"></svg>
+      <div class="coolLegend">
+        <span><i style="background:#ff7a59"></i>Extrusive (surface)</span>
+        <span><i style="background:#c98a4b"></i>Intrusive (in crust)</span>
+      </div>
+    </div>
+    <div>
+      <div class="coolTabs" id="coolTabs"></div>
+      <div class="rockPanel" id="coolPanel" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <div class="grid two" style="margin-top:18px">
+    <div class="plain" style="margin:0">
+      <span class="tag">Extrusive · volcanic</span>
+      <p>Magma erupts as lava and cools in seconds-to-days against air or water. Atoms barely have time to organize, so crystals are <b>tiny or glassy</b>. Example: <b>basalt</b> (fine-grained), pumice, obsidian. Fine grain = surface.</p>
+    </div>
+    <div class="plain" style="margin:0;background:linear-gradient(180deg,#2a2419,#201d16);border-color:#4a3f2c;border-left-color:#c98a4b">
+      <span class="tag" style="color:#e0b06a">Intrusive · plutonic</span>
+      <p>Magma stalls deep in the crust and cools over thousands-to-millions of years. Slow cooling grows <b>big, visible crystals</b>. Example: <b>granite</b>, gabbro, diorite. Coarse grain = depth.</p>
+    </div>
+  </div>
+  <p class="hint">Key idea: same chemistry can give two rocks — only the cooling speed (and so the crystal size) differs. Basalt ⇄ gabbro, rhyolite ⇄ granite, andesite ⇄ diorite.</p>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8" class="wrap">
+  <h2><span class="num">8</span>Metamorphic &amp; sedimentary rocks</h2>
+  <p class="lead">Igneous rocks crystallize from melt — but they're only one third of the story. Click a process in the rock cycle, then explore example rocks below.</p>
+
+  <div class="cycleWrap">
+    <svg class="cycleSvg" id="cycleSvg" viewBox="0 0 420 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The rock cycle"></svg>
+    <div class="cycleInfo" id="cycleInfo"></div>
+  </div>
+
+  <h3 style="margin:30px 0 6px">Sedimentary rocks — built at the surface</h3>
+  <p class="lead" style="margin-bottom:14px">Made from broken-down bits of older rock, or from minerals/shells settling out of water. Formed by weathering → transport → deposition → burial &amp; cementing (lithification). Click to expand.</p>
+  <div class="chips" id="sedChips"></div>
+
+  <h3 style="margin:30px 0 6px">Metamorphic rocks — re-cooked by heat &amp; pressure</h3>
+  <p class="lead" style="margin-bottom:14px">An existing rock is transformed in the solid state — it never melts. Heat and pressure regrow its minerals, often into aligned bands (foliation). Click to expand.</p>
+  <div class="chips" id="metChips"></div>
+
+  <div class="plain" style="margin-top:24px">
+    <span class="tag">Plain English</span>
+    <p>Three rock families, three recipes for the same atoms. <b>Igneous</b> = frozen from melt. <b>Sedimentary</b> = glued-together debris and chemical/biological precipitates, laid down in layers at the surface. <b>Metamorphic</b> = an old rock cooked and squeezed until its minerals recrystallize — without ever fully melting. The rock cycle endlessly recycles material between all three.</p>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9" class="wrap">
+  <h2><span class="num">9</span>What is this rock/mineral useful for?</h2>
+  <p class="lead">Pick a rock or mineral to see where it shows up in industry and everyday products — the practical payoff of all this geology.</p>
+  <div class="rockLayout">
+    <div class="mineralList" id="useList"></div>
+    <div class="rockPanel" id="usePanel"></div>
+  </div>
+  <div class="plain">
+    <span class="tag">Plain English</span>
+    <p>Almost everything built or manufactured starts as rock. Limestone becomes the cement in concrete; quartz sand becomes glass and silicon chips; gypsum becomes drywall; granite and marble clad buildings. Knowing a rock's minerals tells you what it's good for — hardness, chemistry, and how it breaks all decide its job.</p>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10" class="wrap">
+  <h2><span class="num">10</span>Gemstones</h2>
+  <p class="lead">Gems are just minerals that happen to be rare, hard, and beautiful. Tap a card to see the mineral it comes from, how it forms, the special conditions required, and a rough price range.</p>
+  <div class="gemGrid" id="gemGrid"></div>
+  <div class="plain" style="margin-top:18px">
+    <span class="tag">Plain English</span>
+    <p>What turns an ordinary mineral into a gem is usually a trace of an "impurity" element plus unusual growth conditions. Pure corundum (Al₂O₃) is colorless — add a pinch of chromium and it's a ruby; add iron + titanium and it's a sapphire. Diamond needs the extreme pressure of the deep mantle; emerald needs the rare meeting of beryllium and chromium. Rarity of those conditions is what sets the price.</p>
+  </div>
+  <p class="hint">Price ranges are rough retail per-carat estimates for building intuition — actual value swings enormously with size, color, clarity, and treatment.</p>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="s11" class="wrap">
+  <h2><span class="num">11</span>Plate tectonics — the engine behind it all</h2>
+  <p class="lead">Every rock in this chapter owes its existence to moving plates. The Earth's rigid outer shell is broken into plates that drift on the hot, slowly-flowing mantle below. Where they meet, rock is born, buried, and recycled. Click a boundary or a plate on the map.</p>
+
+  <div class="tectWrap">
+    <div>
+      <div class="tFilters" id="tFilters">
+        <button data-f="all" class="on">Show all</button>
+        <button data-f="div">Divergent (pulling apart)</button>
+        <button data-f="con">Convergent (colliding)</button>
+        <button data-f="tra">Transform (sliding)</button>
+      </div>
+      <div class="mapBox">
+        <svg class="tectSvg" id="tectSvg" viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="World map of tectonic plates and their boundaries"></svg>
+      </div>
+      <div class="tectLegend">
+        <span><i style="border-color:#5ed6c4"></i>Divergent — plates separate (➡︎⬅︎ new crust forms)</span>
+        <span><i style="border-color:#ff7a59"></i>Convergent — plates collide (➡︎⬅︎ crust destroyed)</span>
+        <span><i style="border-color:#b9a7ff;border-top-style:dashed"></i>Transform — plates slide past</span>
+      </div>
+      <p class="arrowKey">Little arrows on each boundary show the direction of motion: facing arrows = coming together, opposing arrows = separating, offset arrows = sliding past.</p>
+    </div>
+    <div class="tectInfo" id="tectInfo"></div>
+  </div>
+
+  <div class="plain" style="margin-top:18px">
+    <span class="tag">Plain English</span>
+    <p>Picture the Earth's surface as a cracked eggshell floating on warm honey. The pieces (plates) creep about as fast as your fingernails grow. Where two pieces pull apart, molten rock wells up and freezes into new ocean floor (that's where basalt is born). Where they crash together, one usually dives under the other — melting, feeding volcanoes, and pushing up mountains. Where they just scrape past each other sideways, you get earthquakes but no new rock. Almost everything — volcanoes, mountains, earthquakes, even where gems form — traces back to these three kinds of edges.</p>
+  </div>
+
+  <h3 style="margin:28px 0 6px">A few more things worth knowing</h3>
+  <div class="factGrid">
+    <div class="factCard"><h4>Why the plates move</h4><p>Heat from Earth's core drives slow <span class="tip" data-tip="The slow churning of hot, solid-but-flowing mantle rock — hot material rises, cools, and sinks, dragging plates along.">convection</span> currents in the mantle. Rising hot rock and sinking cold slabs drag the plates like conveyor belts.</p></div>
+    <div class="factCard"><h4>Sea-floor spreading</h4><p>At mid-ocean ridges, new basalt crust forms continuously and spreads outward, recording Earth's magnetic flips in symmetric stripes — the proof that confirmed plate tectonics.</p></div>
+    <div class="factCard"><h4>Subduction &amp; the Ring of Fire</h4><p>Where ocean plates dive into the mantle (<span class="tip" data-tip="A convergent boundary where one plate sinks beneath another into the mantle, where it partially melts.">subduction</span>), they melt and feed chains of volcanoes — like the Pacific's Ring of Fire.</p></div>
+    <div class="factCard"><h4>Continents drift &amp; collide</h4><p>When two continents converge, neither sinks easily, so the crust crumples upward — that's how the Himalayas (India into Asia) and the Alps were raised.</p></div>
+    <div class="factCard"><h4>The rock cycle's motor</h4><p>Divergent edges make igneous rock; convergent edges bury and metamorphose it; uplift and erosion feed sediment. Plate motion is what keeps Chapter 8's rock cycle turning.</p></div>
+    <div class="factCard"><h4>Hotspots</h4><p>Not all volcanism is at plate edges. Fixed plumes of hot mantle (hotspots) punch through moving plates, building island chains like Hawai‘i as the plate drifts overhead.</p></div>
+  </div>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="s12" class="wrap">
+  <h2><span class="num">12</span>The big mineral reference table</h2>
+  <p class="lead">Everything in one place. The first ~10 rows are visible; scroll inside the table to see the rest. Click any column header to sort, or type to filter.</p>
+
+  <div class="tableTools">
+    <input type="text" id="mtabSearch" placeholder="Filter — try “quartz”, “mantle”, “glass”, “feldspar”…">
+    <span class="count" id="mtabCount"></span>
+  </div>
+  <div class="tableScroll">
+    <table class="mtab" id="mtab">
+      <thead><tr id="mtabHead"></tr></thead>
+      <tbody id="mtabBody"></tbody>
+    </table>
+  </div>
+  <p class="tableHint">Scroll down inside the box to reveal all minerals · click a header to sort · abundance is the rough share of the Earth's crust by volume.</p>
+</section>
+
+<div class="footer wrap">
+  Interactive chapter · property values are representative textbook figures for building intuition, not lab measurements.
+</div>
+
+<script>
+/* ============================================================
+   DATA
+============================================================ */
+const SERIES = {
+  olivine:{
+    name:"Olivine",
+    L:{n:"Forsterite",f:"Mg₂SiO₄",rgb:[111,208,192]},
+    R:{n:"Fayalite",  f:"Fe₂SiO₄",rgb:[160,90,52]},
+    swap:["Mg²⁺","Fe²⁺"],
+    coupled:false,
+    plain:"One smooth ramp from magnesium to iron. The Mg-rich end is the gem peridot; the whole family is the first thing to crystallize from hot magma and the main mineral of the upper mantle.",
+    formula:p=>{const mg=(2*(1-p)).toFixed(2),fe=(2*p).toFixed(2);return `(Mg${sub(mg)}Fe${sub(fe)})SiO₄`;},
+    varieties:[{at:0,n:"Forsterite (peridot)"},{at:.5,n:"Intermediate olivine"},{at:1,n:"Fayalite"}],
+    props:{
+      density:{label:"Density",unit:" g/cm³",a:3.27,b:4.39,dec:2},
+      melt:{label:"Melting point",unit:" °C",a:1890,b:1205,dec:0},
+      color:{label:"Typical color",a:"pale olive-green",b:"brown / amber",text:true},
+      mg:{label:"Mg# (Mg/(Mg+Fe))",unit:"",a:100,b:0,dec:0,suffix:"%"}
+    }
+  },
+  plagioclase:{
+    name:"Plagioclase feldspar",
+    L:{n:"Anorthite",f:"CaAl₂Si₂O₈",rgb:[120,160,120]},
+    R:{n:"Albite",    f:"NaAlSi₃O₈",rgb:[214,224,232]},
+    swap:["Ca²⁺+Al³⁺","Na⁺+Si⁴⁺"],
+    coupled:true,
+    plain:"The continuous branch of Bowen's series. A coupled swap keeps charge balanced: as Ca+Al leave, Na+Si arrive together. Named varieties (labradorite, andesine…) are just stops along the road.",
+    formula:p=>{const ca=(1-p).toFixed(2),na=p.toFixed(2);return `Ca${sub(ca)}Na${sub(na)}(Al,Si)AlSi₂O₈`;},
+    varieties:[{at:0,n:"Anorthite"},{at:.2,n:"Bytownite"},{at:.4,n:"Labradorite"},{at:.6,n:"Andesine"},{at:.8,n:"Oligoclase"},{at:1,n:"Albite"}],
+    props:{
+      density:{label:"Density",unit:" g/cm³",a:2.76,b:2.62,dec:2},
+      melt:{label:"Melting point",unit:" °C",a:1553,b:1118,dec:0},
+      char:{label:"Character",a:"more mafic (Ca)",b:"more felsic (Na)",text:true},
+      an:{label:"Anorthite content (An%)",unit:"",a:100,b:0,dec:0,suffix:"%"}
+    }
+  },
+  alkali:{
+    name:"Alkali feldspar",
+    L:{n:"Orthoclase",f:"KAlSi₃O₈",rgb:[235,200,170]},
+    R:{n:"Albite",    f:"NaAlSi₃O₈",rgb:[222,228,235]},
+    swap:["K⁺","Na⁺"],
+    coupled:false,
+    plain:"Potassium ⇄ sodium feldspar. At high temperature they mix fully; on slow cooling they un-mix into beautiful stripes called perthite. Classic mineral of granite.",
+    formula:p=>{const k=(1-p).toFixed(2),na=p.toFixed(2);return `(K${sub(k)}Na${sub(na)})AlSi₃O₈`;},
+    varieties:[{at:0,n:"Orthoclase / Microcline"},{at:.5,n:"Anorthoclase (unstable, exsolves)"},{at:1,n:"Albite"}],
+    props:{
+      density:{label:"Density",unit:" g/cm³",a:2.56,b:2.62,dec:2},
+      melt:{label:"Melting point",unit:" °C",a:1150,b:1118,dec:0},
+      color:{label:"Typical color",a:"pink / salmon",b:"white",text:true},
+      or:{label:"Orthoclase content (Or%)",unit:"",a:100,b:0,dec:0,suffix:"%"}
+    }
+  },
+  pyroxene:{
+    name:"Pyroxene (orthopyroxene)",
+    L:{n:"Enstatite", f:"MgSiO₃",rgb:[120,190,160]},
+    R:{n:"Ferrosilite",f:"FeSiO₃",rgb:[150,85,55]},
+    swap:["Mg²⁺","Fe²⁺"],
+    coupled:false,
+    plain:"A single-chain silicate where Mg and Fe trade freely, just like olivine. Crystallizes just after olivine and is a dominant mineral in basalt, gabbro, and the mantle.",
+    formula:p=>{const mg=(1-p).toFixed(2),fe=p.toFixed(2);return `(Mg${sub(mg)}Fe${sub(fe)})SiO₃`;},
+    varieties:[{at:0,n:"Enstatite"},{at:.5,n:"Hypersthene"},{at:1,n:"Ferrosilite"}],
+    props:{
+      density:{label:"Density",unit:" g/cm³",a:3.21,b:4.00,dec:2},
+      melt:{label:"Melting point",unit:" °C",a:1557,b:1190,dec:0},
+      color:{label:"Typical color",a:"pale brown-green",b:"dark brown",text:true},
+      mg:{label:"Mg#",unit:"",a:100,b:0,dec:0,suffix:"%"}
+    }
+  },
+  amphibole:{
+    name:"Amphibole",
+    L:{n:"Tremolite",f:"Ca₂Mg₅Si₈O₂₂(OH)₂",rgb:[200,210,195]},
+    R:{n:"Ferro-actinolite",f:"Ca₂Fe₅Si₈O₂₂(OH)₂",rgb:[80,120,80]},
+    swap:["Mg²⁺","Fe²⁺"],
+    coupled:false,
+    plain:"A double-chain silicate that contains water (OH) in its structure — so it only forms when the magma is wet and cool enough. Mg ⇄ Fe runs the tremolite–actinolite series; hornblende is the common dark variety.",
+    formula:p=>{const mg=(5*(1-p)).toFixed(1),fe=(5*p).toFixed(1);return `Ca₂(Mg${sub(mg)}Fe${sub(fe)})Si₈O₂₂(OH)₂`;},
+    varieties:[{at:0,n:"Tremolite (white)"},{at:.5,n:"Actinolite (green)"},{at:1,n:"Ferro-actinolite"}],
+    props:{
+      density:{label:"Density",unit:" g/cm³",a:3.0,b:3.4,dec:2},
+      melt:{label:"Stability",a:"higher-T, drier",b:"lower-T",text:true},
+      color:{label:"Typical color",a:"white / grey",b:"dark green-black",text:true},
+      water:{label:"Contains OH (water)?",a:"yes",b:"yes",text:true}
+    }
+  },
+  quartz:{
+    name:"Quartz (pure end-member)",
+    L:{n:"Quartz",f:"SiO₂",rgb:[225,232,240]},
+    R:{n:"Quartz",f:"SiO₂",rgb:[225,232,240]},
+    swap:["—","—"],
+    coupled:false,
+    pure:true,
+    plain:"The contrast case: quartz is essentially pure SiO₂ with no room for substitution. Its tight framework won't accept foreign atoms, so there's no series — just one fixed composition. It's the very last mineral to crystallize.",
+    formula:()=> "SiO₂  (fixed — no substitution)",
+    varieties:[{at:0,n:"Quartz"},{at:1,n:"Quartz"}],
+    props:{
+      density:{label:"Density",unit:" g/cm³",a:2.65,b:2.65,dec:2},
+      melt:{label:"Melting point",unit:" °C",a:1670,b:1670,dec:0},
+      color:{label:"Typical color",a:"clear / white",b:"clear / white",text:true},
+      sub:{label:"Substitution range",a:"none",b:"none",text:true}
+    }
+  }
+};
+
+const ROCKS = {
+  olivine:{color:"#6fd0c0",mineral:"Olivine",f:"(Mg,Fe)₂SiO₄",
+    note:"Dense, magnesium-rich, no quartz. Forms the deepest igneous rocks.",
+    rocks:[{n:"Dunite",d:"≥90% olivine — almost pure"},{n:"Peridotite",d:"olivine + pyroxene; the mantle rock"},{n:"Basalt / Gabbro",d:"olivine as a minor early phase"}]},
+  pyroxene:{color:"#7fb98f",mineral:"Pyroxene",f:"(Mg,Fe)SiO₃",
+    note:"Pairs with plagioclase to make the most common volcanic rock on Earth.",
+    rocks:[{n:"Basalt",d:"pyroxene + plagioclase, fine-grained (fast cooling)"},{n:"Gabbro",d:"same chemistry, coarse-grained (slow, deep)"},{n:"Peridotite",d:"with olivine, in the mantle"}]},
+  plagioclase:{color:"#cdd7e0",mineral:"Plagioclase",f:"Ca–Na feldspar",
+    note:"Spans the whole color range — Ca-rich in dark rocks, Na-rich in pale ones.",
+    rocks:[{n:"Basalt / Gabbro",d:"Ca-rich plagioclase + pyroxene"},{n:"Andesite / Diorite",d:"intermediate plagioclase"},{n:"Anorthosite",d:"≈100% plagioclase (also the Moon's highlands)"}]},
+  alkali:{color:"#e9c4aa",mineral:"K-feldspar",f:"KAlSi₃O₈",
+    note:"Defines the felsic, continental rocks alongside quartz.",
+    rocks:[{n:"Granite",d:"K-feldspar + quartz + plagioclase + mica"},{n:"Rhyolite",d:"granite's fine-grained volcanic twin"},{n:"Syenite",d:"K-feldspar-rich, low quartz"}]},
+  amphibole:{color:"#6f9f7a",mineral:"Amphibole",f:"hornblende",
+    note:"Needs water; common in intermediate, hydrous magmas.",
+    rocks:[{n:"Andesite / Diorite",d:"hornblende + plagioclase"},{n:"Granite",d:"as a dark accessory"},{n:"Amphibolite",d:"the metamorphic rock it dominates"}]},
+  quartz:{color:"#dfe7f0",mineral:"Quartz",f:"SiO₂",
+    note:"The signature of silica-rich, felsic, crustal rocks. Never in the mantle.",
+    rocks:[{n:"Granite",d:"quartz + feldspars + mica"},{n:"Rhyolite",d:"volcanic equivalent"},{n:"Sandstone / Quartzite",d:"sedimentary & metamorphic, very durable"}]}
+};
+
+const LAYERS = {
+  crust:{name:"Crust",depth:"0–70 km",t:"0–700",p:"1 atm – ~1 GPa",
+    minerals:"Quartz, K-feldspar, plagioclase (Na-rich), micas, amphibole, Na-pyroxene",
+    rocks:"Granite, rhyolite, basalt, gabbro, andesite, plus all sediments & metamorphics",
+    note:"The thin, silica-rich skin. Continental crust is felsic (granite); oceanic crust is mafic (basalt). This is where quartz and K-feldspar belong."},
+  mantle:{name:"Mantle",depth:"70–2,890 km",t:"700–4,000",p:"~1–135 GPa",
+    minerals:"Olivine (Mg-rich), orthopyroxene, clinopyroxene, garnet → high-P phases (wadsleyite, bridgmanite) deeper down",
+    rocks:"Peridotite, dunite (the source rocks of basaltic magma)",
+    note:"Solid silicate rock (it flows over geologic time). Mg-rich olivine + pyroxene dominate the upper mantle — the heartland of this chapter's solid solutions. No quartz here."},
+  outer:{name:"Outer core",depth:"2,890–5,150 km",t:"4,000–5,500",p:"135–330 GPa",
+    minerals:"Liquid iron–nickel alloy (+ light elements) — no silicate minerals",
+    rocks:"None — it's molten metal",
+    note:"A swirling liquid-metal ocean whose convection generates Earth's magnetic field. No solid-solution silicates form here."},
+  inner:{name:"Inner core",depth:"5,150–6,371 km",t:"~5,200–6,000",p:"330–360 GPa",
+    minerals:"Solid iron–nickel alloy (crystalline Fe)",
+    rocks:"None — solid metal",
+    note:"Solid despite being the hottest part of Earth — immense pressure keeps iron crystalline. Pure metal, no silicate solid solutions."}
+};
+
+const BOWEN = [
+  {y:60, label:"Olivine", side:"disc", temp:"~1800°C", c:"#6fd0c0", mafic:true,
+   info:"First to crystallize. Mg-rich olivine forms in the hottest magma. Discontinuous branch — it later reacts with the melt to form pyroxene."},
+  {y:130,label:"Pyroxene",side:"disc",temp:"~1550°C",c:"#7fb98f",mafic:true,
+   info:"Forms as olivine reacts with cooling melt. Common in basalt and gabbro. Mg ⇄ Fe substitution within it."},
+  {y:200,label:"Amphibole",side:"disc",temp:"~1200°C",c:"#6f9f7a",mafic:true,
+   info:"Needs water in the magma. Hornblende is typical. Marks the shift toward intermediate compositions."},
+  {y:270,label:"Biotite mica",side:"disc",temp:"~900°C",c:"#8a7a5c",mafic:true,
+   info:"Last of the dark, iron-magnesium minerals. End of the discontinuous branch."},
+  {y:95, label:"Ca-plagioclase",side:"cont",temp:"~1550°C",c:"#9fb0c3",mafic:false,
+   info:"Top of the continuous branch. Anorthite-rich (calcium) plagioclase crystallizes early."},
+  {y:200,label:"Na-plagioclase",side:"cont",temp:"~1100°C",c:"#cdd7e0",mafic:false,
+   info:"Same crystals, gradually enriched in sodium (albite) as cooling continues — a textbook solid solution in action."},
+  {y:340,label:"K-feldspar",side:"mid",temp:"~750°C",c:"#e9c4aa",mafic:false,
+   info:"The branches converge. Potassium feldspar forms in cool, silica-rich melt — granite territory."},
+  {y:400,label:"Muscovite mica",side:"mid",temp:"~700°C",c:"#dcd2bf",mafic:false,
+   info:"Pale mica, near the end of crystallization in felsic magmas."},
+  {y:460,label:"Quartz",side:"mid",temp:"~650°C",c:"#dfe7f0",mafic:false,
+   info:"The grand finale. Pure SiO₂ fills whatever space is left, at the lowest temperature. No substitution possible."}
+];
+
+/* ============================================================
+   HELPERS
+============================================================ */
+const SUBS={'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉','.':'.'};
+function sub(s){return String(s).split('').map(c=>SUBS[c]||c).join('');}
+function lerp(a,b,t){return a+(b-a)*t;}
+function mixRGB(a,b,t){return `rgb(${Math.round(lerp(a[0],b[0],t))},${Math.round(lerp(a[1],b[1],t))},${Math.round(lerp(a[2],b[2],t))})`;}
+function textColorFor(rgb){return (rgb[0]*0.299+rgb[1]*0.587+rgb[2]*0.114)>150?'#0d1117':'#fff';}
+
+/* ---- real-world photos (Wikimedia, with CSS-texture fallback) ---- */
+const PHOTO = {
+  olivine:{f:"Peridot2.jpg",tex:"cryst",c:["#9ccb4d","#4f6e1f"]},
+  plagioclase:{f:"Labradorite.jpg",tex:"cryst",c:["#b9c4cf","#6d7c8a"]},
+  alkali:{f:"Orthoclase-39046.jpg",tex:"cryst",c:["#e9c4aa","#b07d52"]},
+  pyroxene:{f:"Augite-180435.jpg",tex:"cryst",c:["#6f8f6a","#36502f"]},
+  amphibole:{f:"Hornblende-179119.jpg",tex:"cryst",c:["#4f5f4a","#23301f"]},
+  quartz:{f:"Quartz Brésil.jpg",tex:"cryst",c:["#e6edf3","#9aa7b4"]},
+  granite:{f:"Fjæregranitt3.JPG",tex:"speck",c:["#d8c2b0","#9a7d6a"]},
+  basalt:{f:"Vesicular basalt.jpg",tex:"grain",c:["#4a4a4a","#222222"]},
+  gabbro:{f:"Gabbro pmg ss 2006.jpg",tex:"speck",c:["#5a5750","#2f2d28"]},
+  peridotite:{f:"Peridotite.jpg",tex:"speck",c:["#7d8a5a","#46512c"]},
+  andesite:{f:"AndesitedeAndes.jpg",tex:"grain",c:["#8a7d72","#564b42"]},
+  diorite:{f:"Diorite-unpolished.jpg",tex:"speck",c:["#c9ccce","#6b6f72"]},
+  rhyolite:{f:"Rhyolite - Rhyolithe.jpg",tex:"grain",c:["#c9b6a0","#8a7560"]},
+  obsidian:{f:"Obsidian breccia.jpg",tex:"glass",c:["#1a1a1f","#000000"]},
+  limestone:{f:"Cretaceous limestone (Texas).jpg",tex:"grain",c:["#d8d2c0","#a59b80"]},
+  gypsum:{f:"Selenite gypsum (Red River Formation).jpg",tex:"cryst",c:["#eef1f4","#cfd6dc"]},
+  marble:{f:"Marble building blocks.jpg",tex:"vein",c:["#eceae6","#c4bfb6"]},
+  clay:{f:"Shale.jpg",tex:"layer",c:["#9a8a72","#5d5040"]},
+  halite:{f:"Halite-249324.jpg",tex:"cryst",c:["#f0eef2","#d6cfe0"]},
+  Sandstone:{f:"Lower Antelope Canyon 478.jpg",tex:"layer",c:["#d6a86a","#a87838"]},
+  "Shale / Mudstone":{f:"Shale.jpg",tex:"layer",c:["#6b6256","#3d362d"]},
+  Conglomerate:{f:"Conglomerate Death Valley.JPG",tex:"speck",c:["#b08a6a","#6e5238"]},
+  Limestone:{f:"Cretaceous limestone (Texas).jpg",tex:"grain",c:["#d8d2c0","#a59b80"]},
+  "Rock salt / Gypsum":{f:"Halite-249324.jpg",tex:"cryst",c:["#f0eef2","#d6cfe0"]},
+  Coal:{f:"Coal anthracite.jpg",tex:"glass",c:["#20201f","#000000"]},
+  Slate:{f:"Slates 0791.jpg",tex:"layer",c:["#4a4f57","#2a2e34"]},
+  Schist:{f:"Mica schist.jpg",tex:"band",c:["#7d7060","#463d31"]},
+  Gneiss:{f:"GneissCloseup.JPG",tex:"band",c:["#b0a290","#5f564a"]},
+  Marble:{f:"Marble building blocks.jpg",tex:"vein",c:["#eceae6","#c4bfb6"]},
+  Quartzite:{f:"Quartzite.jpg",tex:"cryst",c:["#d8cfc4","#a89a88"]},
+  Hornfels:{f:"Hornfels2.jpg",tex:"grain",c:["#5a5048","#322c27"]},
+  Diamond:{f:"Rough diamond.jpg",tex:"facet",c:["#d6f4ff","#8fc0d4"]},
+  Ruby:{f:"Cut Ruby.jpg",tex:"facet",c:["#ff5d73","#9e1c33"]},
+  Sapphire:{f:"Logan sapphire smithsonian.jpg",tex:"facet",c:["#5d8bff","#1e2c7a"]},
+  Emerald:{f:"Emerald Rough 600x450.jpg",tex:"facet",c:["#3ddc84","#0d5631"]},
+  Peridot:{f:"Peridot2.jpg",tex:"facet",c:["#bfe04a","#6f9a1e"]},
+  Amethyst:{f:"Amethyst. Magaliesburg, South Africa.jpg",tex:"facet",c:["#b98cff","#5a2796"]},
+  Topaz:{f:"Topaz cut.jpg",tex:"facet",c:["#ffd277","#c98a2b"]},
+  Garnet:{f:"Almandine-Andradite-Grossular-275782.jpg",tex:"facet",c:["#e0506a","#7a1d2c"]},
+  Opal:{f:"Opal from Yowah, Queensland, Australia.jpg",tex:"facet",c:["#7fe7ff","#c98aff"]}
+};
+function fileURL(f,w){return "https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(f)+"?width="+(w||440);}
+function thumb(slug,size){
+  const p=PHOTO[slug]; if(!p)return '';
+  const cls='thumb tex-'+(p.tex||'grain')+(size==='sm'?' sm':'');
+  return `<div class="${cls}" style="--t1:${p.c[0]};--t2:${p.c[1]}">
+    <img src="${fileURL(p.f,size==='sm'?260:440)}" loading="lazy" alt="" referrerpolicy="no-referrer" onerror="this.remove()">
+    <span class="cap">real-world look</span></div>`;
+}
+
+/* ============================================================
+   SECTION 2 — slider lab
+============================================================ */
+let activeSeries='olivine';
+const tabsEl=document.getElementById('seriesTabs');
+Object.keys(SERIES).forEach(k=>{
+  const b=document.createElement('button');
+  b.textContent=SERIES[k].name; b.dataset.k=k;
+  if(k===activeSeries)b.classList.add('on');
+  b.onclick=()=>{activeSeries=k;[...tabsEl.children].forEach(c=>c.classList.toggle('on',c.dataset.k===k));document.getElementById('comp').value=50;renderLab();};
+  tabsEl.appendChild(b);
+});
+
+function renderLab(){
+  const s=SERIES[activeSeries];
+  const p=+document.getElementById('comp').value/100;
+  // swatch
+  const rgb=[lerp(s.L.rgb[0],s.R.rgb[0],p),lerp(s.L.rgb[1],s.R.rgb[1],p),lerp(s.L.rgb[2],s.R.rgb[2],p)];
+  const sw=document.getElementById('swatch');
+  sw.style.background=mixRGB(s.L.rgb,s.R.rgb,p);
+  const tc=textColorFor(rgb);
+  document.getElementById('swatchLabel').textContent=s.pure?"Fixed composition":"";
+  document.getElementById('swatchLabel').style.color=tc;
+  // variety name
+  let v=s.varieties[0].n; let best=1;
+  s.varieties.forEach(x=>{const d=Math.abs(x.at-p);if(d<best){best=d;v=x.n;}});
+  document.getElementById('varName').textContent=v;
+  document.getElementById('varName').style.color=tc==='#0d1117'?'var(--text)':'var(--text)';
+  // pct
+  document.getElementById('pctReadout').textContent=s.pure?"—":`${Math.round((1-p)*100)}% ${s.L.n.split(' ')[0]} · ${Math.round(p*100)}% ${s.R.n.split(' ')[0]}`;
+  // ends
+  document.getElementById('endL').textContent=s.L.n;document.getElementById('endLf').textContent=s.L.f;
+  document.getElementById('endR').textContent=s.R.n;document.getElementById('endRf').textContent=s.R.f;
+  // formula
+  document.getElementById('liveFormula').textContent=s.formula(p);
+  // substitution text
+  const st=document.getElementById('subText');
+  if(s.pure){st.innerHTML="<span class='swap'>No substitution</span> — the framework is too rigid to host other atoms.";}
+  else{st.innerHTML=`Substitution: <span class='swap'>${s.swap[0]} ⇄ ${s.swap[1]}</span>${s.coupled?" &nbsp;(coupled — paired to balance charge)":""}`;}
+  // disable slider for pure
+  document.getElementById('comp').disabled=!!s.pure;
+  document.getElementById('comp').style.opacity=s.pure?.4:1;
+  // props
+  const ul=document.getElementById('propList');ul.innerHTML='';
+  Object.values(s.props).forEach(pr=>{
+    let val;
+    if(pr.text){val = p<.5?pr.a:(p>.5?pr.b:`${pr.a} → ${pr.b}`);}
+    else{val=lerp(pr.a,pr.b,p).toFixed(pr.dec)+(pr.suffix||'')+(pr.unit||'');}
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="k">${pr.label}</span><span class="v">${val}</span>`;
+    ul.appendChild(li);
+  });
+  document.getElementById('seriesPlain').textContent=s.plain;
+  document.getElementById('seriesThumb').innerHTML=thumb(activeSeries);
+}
+document.getElementById('comp').addEventListener('input',renderLab);
+renderLab();
+
+// reference chips
+const chipsEl=document.getElementById('seriesChips');
+Object.keys(SERIES).forEach(k=>{
+  const s=SERIES[k];
+  const d=document.createElement('details');d.className='chip';
+  d.innerHTML=`<summary>${s.name}<span class="pl">+</span></summary>
+    <div class="body">
+      ${thumb(k,'sm')}
+      <div style="margin-top:8px"><b style="color:var(--text)">End-members:</b> ${s.L.n} <span class="f">${s.L.f}</span> ⇄ ${s.R.n} <span class="f">${s.R.f}</span></div>
+      <div style="margin-top:6px"><b style="color:var(--text)">Swap:</b> ${s.pure?'none (pure SiO₂)':s.swap[0]+' ⇄ '+s.swap[1]+(s.coupled?' (coupled)':'')}</div>
+      <div style="margin-top:6px"><b style="color:var(--text)">Varieties:</b> ${s.varieties.map(x=>x.n).join(', ')}</div>
+    </div>`;
+  chipsEl.appendChild(d);
+});
+
+/* ============================================================
+   SECTION 3 — minerals → rocks
+============================================================ */
+const mlist=document.getElementById('mineralList');
+let activeRock='olivine';
+Object.keys(ROCKS).forEach(k=>{
+  const r=ROCKS[k];
+  const b=document.createElement('button');b.dataset.k=k;
+  if(k===activeRock)b.classList.add('on');
+  b.innerHTML=`<span class="dot" style="background:${r.color}"></span>${r.mineral}`;
+  b.onclick=()=>{activeRock=k;[...mlist.children].forEach(c=>c.classList.toggle('on',c.dataset.k===k));renderRock();};
+  mlist.appendChild(b);
+});
+function renderRock(){
+  const r=ROCKS[activeRock];
+  document.getElementById('rockPanel').innerHTML=`
+    <h3>${r.mineral}</h3>
+    <span class="formula">${r.f}</span>
+    ${thumb(activeRock)}
+    <p style="color:var(--muted);margin:12px 0 0">${r.note}</p>
+    <div class="rockChips">${r.rocks.map(x=>`<div class="r"><b>${x.n}</b><span>${x.d}</span></div>`).join('')}</div>`;
+}
+renderRock();
+
+/* ============================================================
+   SECTION 4 — Earth
+============================================================ */
+const ring=document.getElementById('ering');
+let activeLayer='crust';
+function renderLayer(){
+  const l=LAYERS[activeLayer];
+  document.getElementById('layerInfo').innerHTML=`
+    <h3>${l.name}</h3>
+    <div style="color:var(--dim);font-size:13px">Depth ${l.depth}</div>
+    <div class="pt">
+      <div>Temperature<b>${l.t} °C</b></div>
+      <div>Pressure<b>${l.p}</b></div>
+    </div>
+    <div><b style="color:var(--accent)">Minerals:</b><br><span style="color:var(--muted)">${l.minerals}</span></div>
+    <div style="margin-top:10px"><b style="color:var(--accent)">Rocks:</b><br><span style="color:var(--muted)">${l.rocks}</span></div>
+    <p class="mini">${l.note}</p>`;
+  // highlight ring
+  ring.innerHTML='';
+  const rmap={crust:200,mantle:170,outer:92,inner:46};
+  const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c.setAttribute('cx',210);c.setAttribute('cy',210);c.setAttribute('r',rmap[activeLayer]);
+  c.setAttribute('fill','none');c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','3');
+  c.setAttribute('stroke-dasharray','6 6');c.style.filter='drop-shadow(0 0 6px #fff)';
+  ring.appendChild(c);
+}
+document.querySelectorAll('.elayer').forEach(el=>{
+  el.style.cursor='pointer';
+  el.addEventListener('click',()=>{activeLayer=el.dataset.layer;renderLayer();});
+  el.addEventListener('mouseenter',()=>el.setAttribute('stroke','#fff'));
+  el.addEventListener('mouseleave',()=>el.setAttribute('stroke','#0d1117'));
+});
+renderLayer();
+
+/* ============================================================
+   SECTION 5 — Bowen's series SVG
+============================================================ */
+const bsvg=document.getElementById('bowenSvg');
+const NS='http://www.w3.org/2000/svg';
+let activeBowen=0;
+function el(tag,attrs){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+
+function buildBowen(){
+  bsvg.innerHTML='';
+  // temperature gradient bar on far left
+  const grad=el('linearGradient',{id:'btemp',x1:'0',y1:'0',x2:'0',y2:'1'});
+  grad.appendChild(el('stop',{offset:'0%','stop-color':'#ff6b6b'}));
+  grad.appendChild(el('stop',{offset:'100%','stop-color':'#7aa2ff'}));
+  const defs=el('defs',{});defs.appendChild(grad);bsvg.appendChild(defs);
+  bsvg.appendChild(el('rect',{x:8,y:50,width:14,height:470,rx:7,fill:'url(#btemp)'}));
+  const t1=el('text',{x:15,y:44,'text-anchor':'middle',class:'tempScale',fill:'#ff6b6b','font-weight':'700'});t1.textContent='HOT';bsvg.appendChild(t1);
+  const t2=el('text',{x:15,y:535,'text-anchor':'middle',class:'tempScale',fill:'#7aa2ff','font-weight':'700'});t2.textContent='COOL';bsvg.appendChild(t2);
+
+  // branch labels
+  const dl=el('text',{x:150,y:38,'text-anchor':'middle',fill:'#e8915a','font-size':13,'font-weight':700});dl.textContent='Discontinuous';bsvg.appendChild(dl);
+  const cl=el('text',{x:380,y:38,'text-anchor':'middle',fill:'#7aa2ff','font-size':13,'font-weight':700});cl.textContent='Continuous';bsvg.appendChild(cl);
+
+  // connecting arrows discontinuous branch
+  const discX=150, contX=380;
+  function arrow(x,y1,y2){const l=el('line',{x1:x,y1:y1,x2:x,y2:y2,stroke:'#445',  'stroke-width':2,'marker-end':'url(#ah)'});return l;}
+  const m=el('marker',{id:'ah',markerWidth:8,markerHeight:8,refX:4,refY:4,orient:'auto'});
+  m.appendChild(el('path',{d:'M0,0 L8,4 L0,8 Z',fill:'#667'}));defs.appendChild(m);
+
+  const disc=BOWEN.filter(b=>b.side==='disc');
+  for(let i=0;i<disc.length-1;i++)bsvg.appendChild(arrow(discX,disc[i].y+22,disc[i+1].y-3));
+  const cont=BOWEN.filter(b=>b.side==='cont');
+  for(let i=0;i<cont.length-1;i++)bsvg.appendChild(arrow(contX,cont[i].y+22,cont[i+1].y-3));
+  // converge lines into K-feldspar
+  const kf=BOWEN.find(b=>b.label==='K-feldspar');
+  bsvg.appendChild(el('line',{x1:discX,y1:disc[disc.length-1].y+22,x2:265,y2:kf.y-3,stroke:'#445','stroke-width':2}));
+  bsvg.appendChild(el('line',{x1:contX,y1:cont[cont.length-1].y+22,x2:265,y2:kf.y-3,stroke:'#445','stroke-width':2}));
+  const mid=BOWEN.filter(b=>b.side==='mid');
+  for(let i=0;i<mid.length-1;i++)bsvg.appendChild(arrow(265,mid[i].y+22,mid[i+1].y-3));
+
+  // nodes
+  BOWEN.forEach((b,i)=>{
+    const x = b.side==='disc'?discX : b.side==='cont'?contX : 265;
+    const g=el('g',{class:'bnode'});g.dataset.i=i;
+    const w=130;
+    const rect=el('rect',{x:x-w/2,y:b.y,width:w,height:22,rx:11,fill:b.c,stroke:i===activeBowen?'#fff':'#0d1117','stroke-width':i===activeBowen?3:1.5});
+    const txt=el('text',{x:x,y:b.y+15,'text-anchor':'middle','font-size':12,'font-weight':700,fill:textColorFor(hexToRgb(b.c))});
+    txt.textContent=b.label;
+    g.appendChild(rect);g.appendChild(txt);
+    g.addEventListener('click',()=>{activeBowen=i;buildBowen();renderBowenInfo();});
+    bsvg.appendChild(g);
+  });
+  // mafic/felsic side labels
+  const mf=el('text',{x:470,y:90,'text-anchor':'middle',fill:'#e8915a','font-size':11});mf.textContent='dark / mafic';bsvg.appendChild(mf);
+  const fl=el('text',{x:470,y:470,'text-anchor':'middle',fill:'#7aa2ff','font-size':11});fl.textContent='light / felsic';bsvg.appendChild(fl);
+}
+function hexToRgb(h){const m=h.replace('#','');return [parseInt(m.substr(0,2),16),parseInt(m.substr(2,2),16),parseInt(m.substr(4,2),16)];}
+function renderBowenInfo(){
+  const b=BOWEN[activeBowen];
+  document.getElementById('bowenInfo').innerHTML=`
+    <span class="badge ${b.mafic?'b-mafic':'b-felsic'}">${b.mafic?'mafic / dark':'felsic / light'}</span>
+    <h3 style="margin-top:8px">${b.label}</h3>
+    <div style="color:var(--accent);font-family:'SF Mono',monospace;font-size:14px">${b.temp} · ${b.side==='cont'?'continuous branch':b.side==='disc'?'discontinuous branch':'convergence'}</div>
+    <p style="color:var(--muted);margin:10px 0 0">${b.info}</p>`;
+}
+buildBowen();renderBowenInfo();
+
+/* ============================================================
+   SECTION 6 — rock -> minerals (reverse lookup)
+============================================================ */
+const ROCK_RECIPES = {
+  granite:{name:"Granite",type:"Igneous · intrusive",note:"The classic felsic, continental rock. Pale, coarse-grained, quartz-rich.",
+    minerals:[{n:"Quartz",f:"SiO₂",pct:30,c:"#dfe7f0"},{n:"K-feldspar",f:"KAlSi₃O₈",pct:35,c:"#e9c4aa"},{n:"Na-plagioclase",f:"NaAlSi₃O₈",pct:20,c:"#cdd7e0"},{n:"Biotite / muscovite mica",f:"mica",pct:10,c:"#8a7a5c"},{n:"Amphibole (accessory)",f:"hornblende",pct:5,c:"#6f9f7a"}]},
+  basalt:{name:"Basalt",type:"Igneous · extrusive",note:"The most common volcanic rock on Earth — ocean floor & lava flows. Dark, fine-grained.",
+    minerals:[{n:"Ca-plagioclase",f:"CaAl₂Si₂O₈",pct:50,c:"#9fb0c3"},{n:"Pyroxene",f:"(Mg,Fe)SiO₃",pct:40,c:"#7fb98f"},{n:"Olivine",f:"(Mg,Fe)₂SiO₄",pct:8,c:"#6fd0c0"},{n:"Fe–Ti oxides",f:"magnetite",pct:2,c:"#555"}]},
+  gabbro:{name:"Gabbro",type:"Igneous · intrusive",note:"Basalt's coarse-grained twin — same chemistry, cooled slowly at depth.",
+    minerals:[{n:"Ca-plagioclase",f:"CaAl₂Si₂O₈",pct:50,c:"#9fb0c3"},{n:"Pyroxene",f:"(Mg,Fe)SiO₃",pct:42,c:"#7fb98f"},{n:"Olivine",f:"(Mg,Fe)₂SiO₄",pct:8,c:"#6fd0c0"}]},
+  peridotite:{name:"Peridotite",type:"Igneous · mantle",note:"The rock of the upper mantle. Very dense, olivine-dominated, no quartz.",
+    minerals:[{n:"Olivine",f:"(Mg,Fe)₂SiO₄",pct:65,c:"#6fd0c0"},{n:"Pyroxene",f:"(Mg,Fe)SiO₃",pct:30,c:"#7fb98f"},{n:"Garnet / spinel",f:"accessory",pct:5,c:"#a4502a"}]},
+  andesite:{name:"Andesite / Diorite",type:"Igneous · intermediate",note:"Intermediate composition. Andesite (volcanic) vs diorite (plutonic) — same recipe, different grain size.",
+    minerals:[{n:"Plagioclase (intermediate)",f:"Ca–Na feldspar",pct:55,c:"#cdd7e0"},{n:"Amphibole",f:"hornblende",pct:25,c:"#6f9f7a"},{n:"Pyroxene",f:"(Mg,Fe)SiO₃",pct:15,c:"#7fb98f"},{n:"Biotite",f:"mica",pct:5,c:"#8a7a5c"}]},
+  rhyolite:{name:"Rhyolite",type:"Igneous · extrusive",note:"Granite's volcanic equivalent — felsic lava, fine-grained or glassy.",
+    minerals:[{n:"Quartz",f:"SiO₂",pct:35,c:"#dfe7f0"},{n:"K-feldspar",f:"KAlSi₃O₈",pct:35,c:"#e9c4aa"},{n:"Na-plagioclase",f:"NaAlSi₃O₈",pct:22,c:"#cdd7e0"},{n:"Biotite",f:"mica",pct:8,c:"#8a7a5c"}]}
+};
+const rmList=document.getElementById('rmList');
+let activeRM='granite';
+Object.keys(ROCK_RECIPES).forEach(k=>{
+  const r=ROCK_RECIPES[k];
+  const b=document.createElement('button');b.dataset.k=k;
+  if(k===activeRM)b.classList.add('on');
+  b.innerHTML=`<span class="dot" style="background:${r.minerals[0].c}"></span>${r.name}`;
+  b.onclick=()=>{activeRM=k;[...rmList.children].forEach(c=>c.classList.toggle('on',c.dataset.k===k));renderRM();};
+  rmList.appendChild(b);
+});
+function renderRM(){
+  const r=ROCK_RECIPES[activeRM];
+  document.getElementById('rmPanel').innerHTML=`
+    <h3>${r.name}</h3>
+    <div style="color:var(--dim);font-size:13px">${r.type}</div>
+    ${thumb(activeRM)}
+    <p style="color:var(--muted);margin:10px 0 0">${r.note}</p>
+    <ul class="recipe">${r.minerals.map(m=>`
+      <li>
+        <div class="top"><b>${m.n}</b><span>${m.f} · ${m.pct}%</span></div>
+        <div class="track"><div class="fill" style="width:${m.pct}%;background:${m.c}"></div></div>
+      </li>`).join('')}</ul>`;
+}
+renderRM();
+
+/* ============================================================
+   SECTION 7 — cooling environment
+============================================================ */
+const COOLING = {
+  basalt:{name:"Basalt",env:"ex",twin:"Gabbro",
+    where:"Erupted as lava; cooled in contact with the atmosphere or seawater.",
+    grain:"Fine-grained / aphanitic — crystals too small to see without a lens",
+    speed:"Seconds to days",
+    facts:["Most common volcanic rock","Forms oceanic crust & lava flows","Dark, mafic"]},
+  obsidian:{name:"Obsidian",env:"ex",twin:"—",
+    where:"Lava cooled so fast at the surface that no crystals formed at all.",
+    grain:"Glassy — no crystals (volcanic glass)",
+    speed:"Near-instant",
+    facts:["Felsic glass","Conchoidal fracture","Quenched at the surface"]},
+  rhyolite:{name:"Rhyolite",env:"ex",twin:"Granite",
+    where:"Felsic lava erupted and chilled at the surface.",
+    grain:"Fine-grained, sometimes with a few larger crystals (porphyritic)",
+    speed:"Days to years",
+    facts:["Pale, silica-rich","Granite's surface twin","Explosive eruptions"]},
+  andesite:{name:"Andesite",env:"ex",twin:"Diorite",
+    where:"Intermediate lava at volcanic arcs; cooled at/near the surface.",
+    grain:"Fine-grained, commonly porphyritic",
+    speed:"Days to years",
+    facts:["Typical of subduction-zone volcanoes","Intermediate composition"]},
+  granite:{name:"Granite",env:"in",twin:"Rhyolite",
+    where:"Magma stalled deep in the crust and cooled very slowly, never touching air.",
+    grain:"Coarse-grained / phaneritic — interlocking visible crystals",
+    speed:"Tens of thousands → millions of years",
+    facts:["Backbone of continents","Quartz + K-feldspar visible to the eye","Felsic"]},
+  gabbro:{name:"Gabbro",env:"in",twin:"Basalt",
+    where:"Mafic magma cooled slowly within the crust (e.g. lower oceanic crust).",
+    grain:"Coarse-grained",
+    speed:"Thousands → millions of years",
+    facts:["Same chemistry as basalt","Dark, dense","Crystals you can see"]},
+  diorite:{name:"Diorite",env:"in",twin:"Andesite",
+    where:"Intermediate magma cooled slowly at depth.",
+    grain:"Coarse-grained, salt-and-pepper look",
+    speed:"Thousands → millions of years",
+    facts:["Plutonic equivalent of andesite","Plagioclase + amphibole"]}
+};
+const coolTabs=document.getElementById('coolTabs');
+let activeCool='basalt';
+Object.keys(COOLING).forEach(k=>{
+  const c=COOLING[k];
+  const b=document.createElement('button');b.dataset.k=k;b.textContent=c.name;
+  if(k===activeCool)b.classList.add('on');
+  b.onclick=()=>{activeCool=k;[...coolTabs.children].forEach(x=>x.classList.toggle('on',x.dataset.k===k));renderCool();};
+  coolTabs.appendChild(b);
+});
+function renderCool(){
+  const c=COOLING[activeCool];
+  const ex=c.env==='ex';
+  document.getElementById('coolPanel').innerHTML=`
+    <span class="envBadge ${ex?'env-ex':'env-in'}">${ex?'EXTRUSIVE · cooled at the surface':'INTRUSIVE · cooled inside the crust'}</span>
+    <h3 style="margin:6px 0 2px">${c.name}</h3>
+    ${thumb(activeCool)}
+    <p style="color:var(--muted);margin:6px 0 0">${c.where}</p>
+    <div style="margin-top:12px">
+      <div class="pill"><b>Crystals:</b> ${c.grain}</div>
+      <div class="pill"><b>Cooling time:</b> ${c.speed}</div>
+      <div class="pill"><b>Counterpart:</b> ${c.twin}</div>
+    </div>
+    <div style="margin-top:12px">${c.facts.map(f=>`<span class="pill">${f}</span>`).join('')}</div>`;
+  highlightCoolScene(ex);
+}
+function highlightCoolScene(ex){
+  const surf=document.getElementById('cs-surface'),plut=document.getElementById('cs-pluton');
+  if(surf)surf.setAttribute('opacity',ex?'1':'0.25');
+  if(plut)plut.setAttribute('opacity',ex?'0.25':'1');
+}
+function buildCoolScene(){
+  const s=document.getElementById('coolSvg');
+  s.innerHTML=`
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1b2740"/><stop offset="100%" stop-color="#243049"/></linearGradient>
+      <linearGradient id="crust7" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5a4632"/><stop offset="100%" stop-color="#3a2c1e"/></linearGradient>
+    </defs>
+    <rect x="0" y="0" width="420" height="110" fill="url(#sky)"/>
+    <rect x="0" y="110" width="420" height="190" fill="url(#crust7)"/>
+    <!-- volcano -->
+    <polygon points="150,110 230,110 215,55 165,55" fill="#4a3a28"/>
+    <polygon points="165,55 215,55 198,38 182,38" fill="#6b5640"/>
+    <!-- magma chamber -->
+    <ellipse cx="190" cy="240" rx="70" ry="40" fill="#a4502a"/>
+    <ellipse cx="190" cy="240" rx="44" ry="24" fill="#e07b3c"/>
+    <!-- conduit -->
+    <path d="M182,200 Q186,130 184,46 L196,46 Q198,130 198,200 Z" fill="#c0392b"/>
+    <!-- extrusive group: lava flow + label -->
+    <g id="cs-surface">
+      <path d="M182,40 Q150,52 120,58 Q90,64 60,66 L60,80 Q120,74 182,52 Z" fill="#ff7a59"/>
+      <circle cx="78" cy="70" r="5" fill="#ff9270"/>
+      <text x="64" y="100" font-size="11" fill="#ff9270" font-weight="700">basalt / lava</text>
+      <text x="232" y="46" font-size="10" fill="#ff9270">erupts → fast cooling</text>
+    </g>
+    <!-- intrusive group: pluton glow -->
+    <g id="cs-pluton">
+      <ellipse cx="190" cy="240" rx="76" ry="44" fill="none" stroke="#e0b06a" stroke-width="3" stroke-dasharray="5 5"/>
+      <text x="190" y="244" text-anchor="middle" font-size="11" fill="#2a1d0e" font-weight="700">granite pluton</text>
+      <text x="190" y="290" text-anchor="middle" font-size="10" fill="#e0b06a">trapped → slow cooling</text>
+    </g>
+    <text x="8" y="124" font-size="10" fill="#cdb89a">CRUST</text>
+    <text x="8" y="20" font-size="10" fill="#9fb0c3">ATMOSPHERE</text>`;
+}
+buildCoolScene();renderCool();
+
+/* ============================================================
+   SECTION 8 — rock cycle + sedimentary/metamorphic
+============================================================ */
+const CYCLE = {
+  melt:{name:"Melting → Magma",c:"#ff6b6b",
+    info:"Deep heat melts existing rock into magma. When it cools and crystallizes (Chapters 1–7), it becomes IGNEOUS rock."},
+  weather:{name:"Weathering & Erosion",c:"#7bdc8b",
+    info:"At the surface, rock is broken down physically and chemically into sediment (gravel, sand, mud, dissolved ions) and carried away by water, wind, and ice."},
+  deposit:{name:"Deposition & Lithification",c:"#7aa2ff",
+    info:"Sediment settles in layers, gets buried, compacted, and cemented together — turning loose grains into solid SEDIMENTARY rock."},
+  meta:{name:"Heat & Pressure",c:"#ffb454",
+    info:"Buried deep (but not melted), any rock is squeezed and heated until its minerals recrystallize into METAMORPHIC rock, often with banding (foliation)."}
+};
+const cnodes=[
+  {k:"melt",x:210,y:55},{k:"weather",x:355,y:160},
+  {k:"deposit",x:210,y:255},{k:"meta",x:65,y:160}
+];
+let activeCycle='weather';
+function buildCycle(){
+  const s=document.getElementById('cycleSvg');
+  let arrows='';
+  // circular arrows between nodes
+  const order=['melt','weather','deposit','meta'];
+  s.innerHTML='';
+  const defs=el('defs',{});
+  const mk=el('marker',{id:'ca',markerWidth:8,markerHeight:8,refX:6,refY:4,orient:'auto'});
+  mk.appendChild(el('path',{d:'M0,0 L8,4 L0,8 Z',fill:'#5a6b82'}));defs.appendChild(mk);
+  s.appendChild(defs);
+  // big rotating circle path arrows
+  const cx=210,cy=160,R=105;
+  for(let i=0;i<4;i++){
+    const a0=(-90+i*90+16)*Math.PI/180, a1=(-90+(i+1)*90-16)*Math.PI/180;
+    const x0=cx+R*Math.cos(a0),y0=cy+R*Math.sin(a0),x1=cx+R*Math.cos(a1),y1=cy+R*Math.sin(a1);
+    s.appendChild(el('path',{d:`M${x0},${y0} A${R},${R} 0 0 1 ${x1},${y1}`,fill:'none',stroke:'#3a4658','stroke-width':2,'marker-end':'url(#ca)'}));
+  }
+  const cyText=el('text',{x:cx,y:cy+4,'text-anchor':'middle','font-size':12,fill:'#6b7c93','font-weight':700});
+  cyText.textContent='THE ROCK CYCLE';s.appendChild(cyText);
+  cnodes.forEach(n=>{
+    const d=CYCLE[n.k];
+    const g=el('g',{class:'cnode'});g.dataset.k=n.k;
+    const on=n.k===activeCycle;
+    g.appendChild(el('circle',{cx:n.x,cy:n.y,r:40,fill:d.c,opacity:on?1:0.85,stroke:on?'#fff':'#0d1117','stroke-width':on?3:1.5}));
+    // wrap label into <=2 lines
+    const words=d.name.split(' ');let lines=[];let cur='';
+    words.forEach(w=>{if((cur+' '+w).trim().length>11){lines.push(cur.trim());cur=w;}else cur+=' '+w;});
+    if(cur.trim())lines.push(cur.trim());
+    lines.slice(0,3).forEach((ln,i)=>{
+      const t=el('text',{x:n.x,y:n.y-3+i*12-(lines.length-1)*6,'text-anchor':'middle','font-size':10,'font-weight':700,fill:textColorFor(hexToRgb(d.c))});
+      t.textContent=ln;g.appendChild(t);
+    });
+    g.addEventListener('click',()=>{activeCycle=n.k;buildCycle();renderCycle();});
+    s.appendChild(g);
+  });
+}
+function renderCycle(){
+  const d=CYCLE[activeCycle];
+  const product=activeCycle==='melt'?'Igneous':activeCycle==='deposit'?'Sedimentary':activeCycle==='meta'?'Metamorphic':'Sediment';
+  document.getElementById('cycleInfo').innerHTML=`
+    <span class="envBadge" style="background:${d.c}22;color:${d.c}">${product}</span>
+    <h3 style="margin:6px 0 2px">${d.name}</h3>
+    <p style="color:var(--muted);margin:8px 0 0">${d.info}</p>`;
+}
+buildCycle();renderCycle();
+
+const SEDIMENTARY=[
+  {n:"Sandstone",sub:"Clastic",d:"Cemented sand grains (often quartz). Forms from beaches, dunes, riverbeds. You can often see and feel the grains."},
+  {n:"Shale / Mudstone",sub:"Clastic",d:"Compacted mud and clay in very thin layers. The most abundant sedimentary rock; splits into sheets."},
+  {n:"Conglomerate",sub:"Clastic",d:"Cemented rounded pebbles — evidence of fast-moving water that rounded the clasts before deposition."},
+  {n:"Limestone",sub:"Chemical / biological",d:"Calcium carbonate (CaCO₃) from shells, coral, and precipitation in warm seas. Reacts with acid."},
+  {n:"Rock salt / Gypsum",sub:"Evaporite",d:"Minerals left behind when a body of salty water evaporates. Direct chemical precipitates."},
+  {n:"Coal",sub:"Organic",d:"Compressed plant matter buried in swamps over millions of years — a biological sedimentary rock."}
+];
+const METAMORPHIC=[
+  {n:"Slate",sub:"Foliated · low grade",d:"From shale under mild heat/pressure. Fine-grained, splits into flat sheets (slate roofing)."},
+  {n:"Schist",sub:"Foliated · medium grade",d:"More heat/pressure than slate. Visible aligned mica flakes give a sparkly, wavy fabric."},
+  {n:"Gneiss",sub:"Foliated · high grade",d:"Intense heat/pressure (often from granite or schist). Minerals segregate into light and dark bands."},
+  {n:"Marble",sub:"Non-foliated",d:"Metamorphosed limestone. Calcite recrystallizes into interlocking crystals; prized for sculpture."},
+  {n:"Quartzite",sub:"Non-foliated",d:"Metamorphosed sandstone. Quartz grains fuse into an extremely hard, sugary rock."},
+  {n:"Hornfels",sub:"Contact",d:"Baked by direct contact with an igneous intrusion. Hard, fine-grained, no foliation."}
+];
+function buildChips(arr,target){
+  const host=document.getElementById(target);
+  arr.forEach(x=>{
+    const det=document.createElement('details');det.className='chip';
+    det.innerHTML=`<summary>${x.n}<span class="pl">+</span></summary>
+      <div class="body">${thumb(x.n,'sm')}<div style="color:var(--accent);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin:8px 0 5px">${x.sub}</div>${x.d}</div>`;
+    host.appendChild(det);
+  });
+}
+buildChips(SEDIMENTARY,'sedChips');
+buildChips(METAMORPHIC,'metChips');
+
+/* ============================================================
+   SECTION 9 — industrial / everyday uses
+============================================================ */
+const USES = {
+  limestone:{name:"Limestone",f:"CaCO₃",c:"#cdd7e0",
+    key:"The raw material of cement — heated with clay it becomes Portland cement, the glue in virtually all concrete.",
+    uses:[{t:"Cement & concrete",d:"the backbone of modern construction"},{t:"Steelmaking flux",d:"removes impurities in blast furnaces"},{t:"Agricultural lime",d:"neutralizes acidic soils"},{t:"Building stone",d:"facades, paving"},{t:"Glass & paper filler",d:"a cheap white additive"}]},
+  granite:{name:"Granite",f:"quartz + feldspar",c:"#e9c4aa",
+    key:"Hard, durable, and beautiful — the go-to dimension stone for countertops and monuments.",
+    uses:[{t:"Countertops & tiles",d:"kitchens, bathrooms"},{t:"Monuments & headstones",d:"weather-resistant for centuries"},{t:"Curbstones & paving",d:"heavy-duty infrastructure"},{t:"Building cladding",d:"prestige facades"}]},
+  quartz:{name:"Quartz / silica sand",f:"SiO₂",c:"#dfe7f0",
+    key:"Melt it and you get glass; purify it and you get the silicon of computer chips and solar panels.",
+    uses:[{t:"Glass",d:"windows, bottles, fiber optics"},{t:"Silicon chips & solar",d:"ultra-pure quartz → semiconductor silicon"},{t:"Foundry & abrasives",d:"sandblasting, molds"},{t:"Watches & electronics",d:"piezoelectric quartz oscillators"}]},
+  gypsum:{name:"Gypsum",f:"CaSO₄·2H₂O",c:"#eef1f4",
+    key:"The mineral inside every sheet of drywall — also plaster of Paris.",
+    uses:[{t:"Drywall / plasterboard",d:"interior walls everywhere"},{t:"Plaster & moulds",d:"plaster of Paris, casts"},{t:"Cement retarder",d:"controls setting time"},{t:"Soil conditioner",d:"agriculture"}]},
+  marble:{name:"Marble",f:"recrystallized CaCO₃",c:"#e8eaee",
+    key:"Soft enough to carve, takes a high polish — the classic sculpture and luxury surface stone.",
+    uses:[{t:"Sculpture",d:"carvable, fine grain"},{t:"Flooring & countertops",d:"luxury interiors"},{t:"Building cladding",d:"prestige architecture"},{t:"Crushed for lime",d:"whiting, fillers"}]},
+  clay:{name:"Clay / Shale",f:"clay minerals",c:"#b9a07e",
+    key:"Fired clay becomes brick, tile, and pottery; mixed with limestone it makes cement.",
+    uses:[{t:"Bricks & tiles",d:"fired ceramic construction"},{t:"Pottery & ceramics",d:"tableware, sanitaryware"},{t:"Cement ingredient",d:"with limestone"},{t:"Drilling mud",d:"bentonite clay in oil wells"}]},
+  basalt:{name:"Basalt",f:"pyroxene + plagioclase",c:"#7fb98f",
+    key:"Tough and abundant — crushed for road base and spun into heat-resistant rock wool fiber.",
+    uses:[{t:"Crushed aggregate",d:"roads, railway ballast, concrete"},{t:"Rock / mineral wool",d:"insulation fiber"},{t:"Dimension stone",d:"paving setts"},{t:"Basalt rebar/fiber",d:"corrosion-free reinforcement"}]},
+  halite:{name:"Halite (rock salt)",f:"NaCl",c:"#f0eef2",
+    key:"Table salt, road de-icing, and feedstock for the entire chlor-alkali chemical industry.",
+    uses:[{t:"Food / table salt",d:"seasoning & preservation"},{t:"De-icing roads",d:"winter road safety"},{t:"Chemical feedstock",d:"chlorine, caustic soda, PVC"},{t:"Water softening",d:"ion exchange"}]}
+};
+const useList=document.getElementById('useList');
+let activeUse='limestone';
+Object.keys(USES).forEach(k=>{
+  const u=USES[k];
+  const b=document.createElement('button');b.dataset.k=k;
+  if(k===activeUse)b.classList.add('on');
+  b.innerHTML=`<span class="dot" style="background:${u.c}"></span>${u.name}`;
+  b.onclick=()=>{activeUse=k;[...useList.children].forEach(c=>c.classList.toggle('on',c.dataset.k===k));renderUse();};
+  useList.appendChild(b);
+});
+function renderUse(){
+  const u=USES[activeUse];
+  document.getElementById('usePanel').innerHTML=`
+    <h3>${u.name}</h3>
+    <span class="formula">${u.f}</span>
+    ${thumb(activeUse)}
+    <div class="keyUse"><span class="tag">Star use</span><p>${u.key}</p></div>
+    <div class="useChips">${u.uses.map(x=>`<div class="u"><b>${x.t}</b><span>${x.d}</span></div>`).join('')}</div>`;
+}
+renderUse();
+
+/* ============================================================
+   SECTION 10 — gemstones
+============================================================ */
+const GEMS = [
+  {name:"Diamond",mineral:"Diamond (pure carbon, C)",g1:"#bfefff",g2:"#7fb6c9",
+   price:"$2,000 – $25,000+ / carat",
+   forms:"Crystallizes from carbon deep in the mantle, then rides to the surface in rare kimberlite eruptions.",
+   cond:"~150 km depth, 900–1300 °C and ~5 GPa pressure. Without that extreme pressure carbon forms graphite instead.",
+   fact:"Hardest natural material (Mohs 10)."},
+  {name:"Ruby",mineral:"Corundum (Al₂O₃) + chromium",g1:"#ff5d73",g2:"#b3203a",
+   price:"$1,000 – $15,000+ / carat",
+   forms:"Corundum grows in aluminium-rich, silica-poor metamorphic rocks (marble) or some igneous rocks.",
+   cond:"Needs chromium (the red color) but almost no iron, and silica-poor surroundings — a rare combination.",
+   fact:"Same mineral as sapphire; chromium makes it red."},
+  {name:"Sapphire",mineral:"Corundum (Al₂O₃) + Fe & Ti",g1:"#5d8bff",g2:"#23348f",
+   price:"$800 – $11,000+ / carat",
+   forms:"Forms in metamorphic and igneous rocks; carried to placer deposits by erosion.",
+   cond:"Iron + titanium impurities give the blue. Any color of corundum except red is 'sapphire'.",
+   fact:"Mohs 9 — second only to diamond."},
+  {name:"Emerald",mineral:"Beryl (Be₃Al₂Si₆O₁₈) + Cr/V",g1:"#3ddc84",g2:"#10663b",
+   price:"$500 – $12,000+ / carat",
+   forms:"Grows where beryllium-rich fluids meet chromium/vanadium — usually in veins and pegmatites or metamorphic schist.",
+   cond:"Beryllium and chromium rarely occur together in nature, which is why fine emerald is so scarce.",
+   fact:"Almost always has inclusions ('jardin')."},
+  {name:"Peridot",mineral:"Olivine (Mg,Fe)₂SiO₄",g1:"#bfe04a",g2:"#6f9a1e",
+   price:"$50 – $500 / carat",
+   forms:"The gem variety of Mg-rich olivine — straight from the mantle in basalt, or from meteorites.",
+   cond:"Forms at high temperature deep down; color comes from its own iron, not an impurity.",
+   fact:"One of the few gems that comes in only one color."},
+  {name:"Amethyst",mineral:"Quartz (SiO₂) + iron",g1:"#b98cff",g2:"#5e2b9e",
+   price:"$5 – $50 / carat",
+   forms:"Purple quartz that grows in gas cavities (geodes) in volcanic rock, from silica-rich fluids.",
+   cond:"Trace iron plus natural irradiation produces the purple; gentle heat turns it into citrine.",
+   fact:"The most prized variety of common quartz."},
+  {name:"Topaz",mineral:"Topaz Al₂SiO₄(F,OH)₂",g1:"#ffd277",g2:"#c98a2b",
+   price:"$10 – $1,000 / carat",
+   forms:"Crystallizes from fluorine-rich vapors in the final stages of granite cooling (pegmatites & cavities).",
+   cond:"Requires fluorine-bearing fluids; the rare imperial (orange-pink) topaz commands far higher prices.",
+   fact:"Mohs 8; perfect cleavage makes it tricky to cut."},
+  {name:"Garnet",mineral:"Garnet group silicates",g1:"#e0506a",g2:"#7d1f2f",
+   price:"$20 – $1,000+ / carat",
+   forms:"A classic metamorphic mineral — grows as heat and pressure recrystallize schists and gneisses.",
+   cond:"Different garnet species (almandine, pyrope, tsavorite…) form at different P–T conditions and compositions.",
+   fact:"Used as an index mineral to read metamorphic grade."},
+  {name:"Opal",mineral:"Hydrated silica SiO₂·nH₂O",g1:"#7fe7ff",g2:"#c98aff",
+   price:"$10 – $6,000+ / carat",
+   forms:"Not a true crystal — silica gel seeps into cracks at low temperature near the surface and hardens.",
+   cond:"Needs silica-rich water and slow drying; ordered silica spheres diffract light into 'play-of-color'.",
+   fact:"Contains 3–21% water; can dry out and craze."}
+];
+function gemSVG(g1,g2,id){
+  return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${g1}"/><stop offset="100%" stop-color="${g2}"/></linearGradient></defs>
+    <polygon points="32,4 52,22 32,60 12,22" fill="url(#${id})" stroke="#ffffff66" stroke-width="1"/>
+    <polygon points="32,4 52,22 12,22" fill="#ffffff33"/>
+    <line x1="12" y1="22" x2="52" y2="22" stroke="#ffffff55" stroke-width="1"/>
+    <line x1="32" y1="4" x2="32" y2="60" stroke="#00000022" stroke-width="1"/>
+    <polygon points="22,22 32,60 12,22" fill="#00000018"/>
+  </svg>`;
+}
+const gemGrid=document.getElementById('gemGrid');
+GEMS.forEach((g,i)=>{
+  const card=document.createElement('div');card.className='gem';
+  card.innerHTML=`
+    <div class="crown" style="background:radial-gradient(circle at 50% 30%, ${g.g1}33, transparent 70%)">${PHOTO[g.name]?`<img class="gemimg" src="${fileURL(PHOTO[g.name].f,300)}" loading="lazy" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}${gemSVG(g.g1,g.g2,'gg'+i)}</div>
+    <div class="meta">
+      <h3>${g.name}<span class="price">${g.price}</span></h3>
+      <div class="from">from <b>${g.mineral}</b></div>
+      <div class="more"><div class="inner">
+        <div class="row"><b>How it forms</b><span>${g.forms}</span></div>
+        <div class="row"><b>Conditions</b><span>${g.cond}</span></div>
+        <div class="row"><b>Good to know</b><span>${g.fact}</span></div>
+      </div></div>
+      <div class="tap">tap to ${'expand'}</div>
+    </div>`;
+  card.addEventListener('click',()=>{
+    const open=card.classList.toggle('open');
+    card.querySelector('.tap').textContent=open?'tap to collapse':'tap to expand';
+  });
+  gemGrid.appendChild(card);
+});
+
+const GLOSS = {
+  "mafic":"Rich in magnesium and iron — describes dark, dense igneous rocks and minerals (e.g. basalt, olivine).",
+  "ultramafic":"Extremely rich in magnesium and iron with very little silica, e.g. the peridotite of the mantle.",
+  "felsic":"Rich in feldspar and silica — describes light-colored, lower-density rocks and minerals (e.g. granite, quartz).",
+  "carat":"A unit of gemstone weight equal to 200 mg (0.2 g). Not the same as 'karat', which measures gold purity.",
+  "foliation":"Parallel banding or layering in a metamorphic rock, formed as minerals align under directed pressure.",
+  "foliated":"Having parallel banding or layering, formed as minerals align under pressure during metamorphism.",
+  "lithification":"The process that turns loose sediment into solid rock through compaction and cementation.",
+  "igneous":"Rock formed by the cooling and crystallization of molten magma or lava.",
+  "sedimentary":"Rock formed from compacted, cemented sediment or from minerals precipitated at the surface.",
+  "metamorphic":"Rock transformed in the solid state by heat and pressure, without fully melting.",
+  "intrusive":"Igneous rock that cooled slowly deep in the crust, growing large crystals (e.g. granite). Also called plutonic.",
+  "extrusive":"Igneous rock that cooled quickly at the surface as lava, with tiny crystals (e.g. basalt). Also called volcanic.",
+  "plutonic":"Igneous rock formed deep underground from slowly cooled magma; coarse-grained.",
+  "volcanic":"Igneous rock formed at or near the surface from erupted lava; fine-grained or glassy.",
+  "magma":"Molten rock beneath the Earth's surface; once it erupts it is called lava.",
+  "lava":"Molten rock that has erupted onto the Earth's surface.",
+  "pegmatite":"An exceptionally coarse-grained igneous rock from the last water-rich melt; host to many gems.",
+  "porphyritic":"A texture with large crystals set in a fine-grained matrix, recording two stages of cooling.",
+  "aphanitic":"A fine-grained igneous texture — crystals too small to see without magnification.",
+  "phaneritic":"A coarse-grained igneous texture — crystals large enough to see with the naked eye.",
+  "clastic":"Made of broken fragments (clasts) of older rock, e.g. sandstone.",
+  "evaporite":"A rock made of minerals left behind when salty water evaporates, e.g. rock salt.",
+  "kimberlite":"A rare volcanic rock that carries diamonds up from the deep mantle.",
+  "silicate":"A mineral built around silicon–oxygen (SiO₄) units — by far the most abundant mineral group.",
+  "weathering":"The breakdown of rock at the Earth's surface by physical and chemical processes.",
+  "erosion":"The transport of weathered rock material away by water, wind, or ice.",
+  "flux":"A material (such as limestone) added in smelting to lower the melting point and carry off impurities.",
+  "Mohs":"The Mohs scale ranks mineral scratch-hardness from 1 (talc) to 10 (diamond).",
+  "placer":"A surface deposit where dense minerals or gems concentrate after being freed by erosion.",
+  "exsolve":"To un-mix: a single solid solution separates into two minerals as it cools.",
+  "exsolves":"Un-mixes: a single solid solution separates into two minerals as it cools.",
+  "perthite":"The striped intergrowth that forms when alkali feldspar un-mixes (exsolves) on slow cooling.",
+  "subduction":"A convergent boundary process where one tectonic plate sinks beneath another into the mantle, where it melts.",
+  "subducts":"Sinks beneath another plate into the mantle at a convergent boundary.",
+  "divergent":"A plate boundary where two plates pull apart and new crust forms in the gap (e.g. mid-ocean ridges).",
+  "convergent":"A plate boundary where two plates move together; crust is destroyed by subduction or crumpled into mountains.",
+  "transform":"A plate boundary where two plates slide horizontally past each other, causing earthquakes but creating no new crust.",
+  "convection":"The slow churning of hot mantle rock — hot material rises, cools, and sinks, dragging plates along.",
+  "tectonic":"Relating to the large-scale movement and deformation of the Earth's rigid outer plates.",
+  "hotspot":"A fixed plume of hot mantle that melts through a moving plate, building volcanic island chains like Hawai‘i.",
+  "rift":"A zone where the crust is being pulled apart, often the early stage of a new ocean basin.",
+  "trench":"A deep, narrow depression in the ocean floor marking where one plate subducts beneath another.",
+  "seismic":"Relating to earthquakes or the vibrations that travel through the Earth."
+};
+function escRx(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+const GLOSS_RX=new RegExp("\\b("+Object.keys(GLOSS).sort((a,b)=>b.length-a.length).map(escRx).join("|")+")(es|s)?\\b","gi");
+function glossSkip(node){
+  const el=node.parentElement; if(!el)return true;
+  return !!el.closest('.tip,.gloss,.formula,.f,code,summary,h1,h2,h3,button,.price,.num,nav,.cap,.recipe .top span');
+}
+function applyGlossary(root){
+  const walker=document.createTreeWalker((root||document.body),NodeFilter.SHOW_TEXT,{
+    acceptNode(n){
+      if(!n.nodeValue||!n.nodeValue.trim())return NodeFilter.FILTER_REJECT;
+      if(glossSkip(n))return NodeFilter.FILTER_REJECT;
+      GLOSS_RX.lastIndex=0;
+      return GLOSS_RX.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+    }
+  });
+  const nodes=[];let nn;while(nn=walker.nextNode())nodes.push(nn);
+  nodes.forEach(node=>{
+    const s=node.nodeValue;const frag=document.createDocumentFragment();
+    let last=0,m;GLOSS_RX.lastIndex=0;
+    while(m=GLOSS_RX.exec(s)){
+      const key=m[1].toLowerCase();
+      const def=GLOSS[key]||GLOSS[m[1]]||GLOSS[Object.keys(GLOSS).find(k=>k.toLowerCase()===key)];
+      if(!def){continue;}
+      if(m.index>last)frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+      const span=document.createElement('span');
+      span.className='tip gloss';span.setAttribute('data-tip',def);span.textContent=m[0];
+      frag.appendChild(span);last=m.index+m[0].length;
+    }
+    if(last<s.length)frag.appendChild(document.createTextNode(s.slice(last)));
+    if(last>0)node.parentNode.replaceChild(frag,node);
+  });
+}
+applyGlossary();
+// re-apply after any interaction that injects new text (idempotent — already-wrapped is skipped)
+document.addEventListener('click',()=>setTimeout(()=>applyGlossary(),0));
+// tap support on touch: toggle the tooltip
+document.addEventListener('click',e=>{
+  const g=e.target.closest&&e.target.closest('.gloss');
+  document.querySelectorAll('.gloss.show').forEach(x=>{if(x!==g)x.classList.remove('show');});
+  if(g)g.classList.toggle('show');
+});
+
+/* ============================================================
+   SECTION 11 — plate tectonics map
+============================================================ */
+const COL={div:'#5ed6c4',con:'#ff7a59',tra:'#b9a7ff'};
+const TYPENAME={div:'Divergent boundary',con:'Convergent boundary',tra:'Transform boundary'};
+// Simplified continents (equirectangular-ish, viewBox 720x380)
+const LANDS=[
+  // North America
+  "M70,70 L150,55 L205,70 L195,120 L150,150 L120,180 L95,150 L80,110 Z",
+  // South America
+  "M170,210 L210,195 L225,235 L210,300 L185,330 L172,290 L165,245 Z",
+  // Africa
+  "M330,150 L400,140 L420,180 L405,240 L375,285 L350,245 L335,195 Z",
+  // Europe
+  "M330,90 L400,80 L410,120 L360,130 L330,120 Z",
+  // Asia
+  "M410,70 L560,55 L620,95 L600,140 L520,150 L430,130 L410,100 Z",
+  // India (own block, colliding)
+  "M455,150 L500,148 L495,185 L470,190 Z",
+  // Australia
+  "M560,255 L630,248 L645,285 L600,305 L560,290 Z",
+  // Antarctica
+  "M150,355 L600,355 L600,375 L150,375 Z"
+];
+const PLATES=[
+  {n:"Pacific Plate",x:60,y:230,info:"The largest plate — almost entirely oceanic. It's shrinking as its edges subduct beneath the surrounding plates, creating the Ring of Fire."},
+  {n:"North American Plate",x:130,y:110,info:"Carries North America and part of the Atlantic floor. Spreading from the Mid-Atlantic Ridge on its east, sliding past the Pacific on its west (San Andreas Fault)."},
+  {n:"South American Plate",x:195,y:265,info:"Spreading on the Atlantic side; on its west the Nazca Plate subducts beneath it, building the Andes."},
+  {n:"Eurasian Plate",x:470,y:100,info:"A vast plate carrying Europe and most of Asia. India crashing into its south is raising the Himalayas."},
+  {n:"African Plate",x:375,y:210,info:"Slowly splitting along the East African Rift — a continent in the act of breaking apart."},
+  {n:"Indo-Australian Plate",x:600,y:280,info:"Pushes north into Eurasia (Himalayas) and Southeast Asia, one of the most seismically active regions on Earth."},
+  {n:"Antarctic Plate",x:375,y:365,info:"Surrounds the South Pole and is almost entirely ringed by divergent (spreading) boundaries."}
+];
+// boundaries: type + polyline points + small motion-arrow anchors
+const BOUNDS=[
+  {t:"div",name:"Mid-Atlantic Ridge",pts:"235,70 250,150 245,230 255,310",
+   info:"A classic divergent boundary running down the Atlantic. The Americas and Europe/Africa pull apart ~2–5 cm/yr while fresh basalt erupts to fill the gap — building new ocean floor. Iceland sits right on it."},
+  {t:"div",name:"East African Rift",pts:"385,165 392,205 398,245",
+   info:"A continent caught mid-split. The African Plate is tearing into two; in millions of years a new ocean will flood the rift. Volcanoes like Kilimanjaro line it."},
+  {t:"div",name:"East Pacific Rise",pts:"120,250 130,300 140,345",
+   info:"A fast-spreading divergent ridge in the Pacific — among the quickest crust factories on Earth (up to ~15 cm/yr)."},
+  {t:"con",name:"Andean (Nazca–S. America)",pts:"165,210 168,260 172,305",
+   info:"Oceanic Nazca Plate subducts beneath South America. The descending slab melts and feeds the Andes' volcanoes; the trench offshore is among the deepest scars on the planet."},
+  {t:"con",name:"Himalayan collision",pts:"455,150 480,150 500,150",
+   info:"India slammed into Asia ~50 million years ago. Two continents, neither willing to sink, so the crust buckles upward — raising the Himalayas, still growing today."},
+  {t:"con",name:"Pacific Ring of Fire (W)",pts:"600,95 605,140 600,185",
+   info:"Subduction zones rim the western Pacific (Japan, Indonesia, the Philippines), producing the bulk of the world's largest earthquakes and explosive volcanoes."},
+  {t:"con",name:"Cascadia / Aleutian (N Pacific)",pts:"110,70 150,60 200,65",
+   info:"Oceanic plates dive beneath North America and Alaska, building volcanic arcs and storing energy for great megathrust earthquakes."},
+  {t:"tra",name:"San Andreas Fault",pts:"95,150 110,175 125,200",
+   info:"A transform boundary where the Pacific and North American plates grind sideways past each other. No crust made or destroyed — but the locked-and-slip motion causes California's earthquakes."},
+  {t:"tra",name:"Alpine Fault (NZ)",pts:"640,300 655,315 665,330",
+   info:"New Zealand's transform boundary, where the Pacific and Australian plates slide past with some collision — uplifting the Southern Alps."}
+];
+let tFilter='all', activeBnd=0;
+const tsvg=document.getElementById('tectSvg');
+function midpoint(pts){const a=pts.trim().split(/\s+/).map(p=>p.split(',').map(Number));const m=a[Math.floor(a.length/2)];return m;}
+function dirAt(pts){const a=pts.trim().split(/\s+/).map(p=>p.split(',').map(Number));const p0=a[0],p1=a[a.length-1];const dx=p1[0]-p0[0],dy=p1[1]-p0[1];const L=Math.hypot(dx,dy)||1;return [dx/L,dy/L];}
+function buildTect(){
+  tsvg.innerHTML='';
+  // ocean background
+  tsvg.appendChild(el('rect',{x:0,y:0,width:720,height:380,fill:'#0e2233'}));
+  // subtle lat/long grid
+  for(let gx=0;gx<=720;gx+=90)tsvg.appendChild(el('line',{x1:gx,y1:0,x2:gx,y2:380,stroke:'#16314733','stroke-width':1}));
+  for(let gy=0;gy<=380;gy+=63)tsvg.appendChild(el('line',{x1:0,y1:gy,x2:720,y2:gy,stroke:'#16314733','stroke-width':1}));
+  // landmasses
+  LANDS.forEach(d=>tsvg.appendChild(el('path',{d:d,class:'plate',fill:'#2f4a3a',stroke:'#1c2e24','stroke-width':1.2})));
+  // plate name labels
+  PLATES.forEach(p=>{
+    const t=el('text',{x:p.x,y:p.y,'text-anchor':'middle','font-size':10,fill:'#8fb0c9','font-weight':600,style:'cursor:pointer'});
+    t.textContent=p.n.replace(' Plate','');
+    t.addEventListener('click',()=>{document.getElementById('tectInfo').innerHTML=`<h3>${p.n}</h3><p style="color:var(--muted);margin:8px 0 0">${p.info}</p>`;});
+    tsvg.appendChild(t);
+  });
+  // arrow markers per type
+  const defs=el('defs',{});
+  Object.keys(COL).forEach(k=>{
+    const mk=el('marker',{id:'tm-'+k,markerWidth:7,markerHeight:7,refX:3.5,refY:3.5,orient:'auto'});
+    mk.appendChild(el('path',{d:'M0,0 L7,3.5 L0,7 Z',fill:COL[k]}));defs.appendChild(mk);
+  });
+  tsvg.appendChild(defs);
+  // boundaries
+  BOUNDS.forEach((b,i)=>{
+    if(tFilter!=='all'&&tFilter!==b.t)return;
+    const g=el('g',{class:'bnd'});g.dataset.i=i;
+    const active=i===activeBnd;
+    const poly=el('polyline',{points:b.pts,fill:'none',stroke:COL[b.t],'stroke-width':active?5:3,
+      'stroke-linecap':'round','stroke-linejoin':'round',opacity:active?1:.8,
+      'stroke-dasharray':b.t==='tra'?'7 5':'none'});
+    if(active)poly.style.filter='drop-shadow(0 0 5px '+COL[b.t]+')';
+    g.appendChild(poly);
+    // motion arrows
+    const m=midpoint(b.pts),d=dirAt(b.pts);
+    const nx=-d[1],ny=d[0]; // normal direction
+    if(b.t==='div'){ // arrows point apart along normal
+      g.appendChild(el('line',{x1:m[0],y1:m[1],x2:m[0]+nx*16,y2:m[1]+ny*16,stroke:COL[b.t],'stroke-width':2,'marker-end':'url(#tm-div)'}));
+      g.appendChild(el('line',{x1:m[0],y1:m[1],x2:m[0]-nx*16,y2:m[1]-ny*16,stroke:COL[b.t],'stroke-width':2,'marker-end':'url(#tm-div)'}));
+    }else if(b.t==='con'){ // arrows point toward the line from both sides
+      g.appendChild(el('line',{x1:m[0]+nx*18,y1:m[1]+ny*18,x2:m[0]+nx*4,y2:m[1]+ny*4,stroke:COL[b.t],'stroke-width':2,'marker-end':'url(#tm-con)'}));
+      g.appendChild(el('line',{x1:m[0]-nx*18,y1:m[1]-ny*18,x2:m[0]-nx*4,y2:m[1]-ny*4,stroke:COL[b.t],'stroke-width':2,'marker-end':'url(#tm-con)'}));
+    }else{ // transform — offset parallel arrows
+      g.appendChild(el('line',{x1:m[0]+nx*7-d[0]*10,y1:m[1]+ny*7-d[1]*10,x2:m[0]+nx*7+d[0]*10,y2:m[1]+ny*7+d[1]*10,stroke:COL[b.t],'stroke-width':2,'marker-end':'url(#tm-tra)'}));
+      g.appendChild(el('line',{x1:m[0]-nx*7+d[0]*10,y1:m[1]-ny*7+d[1]*10,x2:m[0]-nx*7-d[0]*10,y2:m[1]-ny*7-d[1]*10,stroke:COL[b.t],'stroke-width':2,'marker-end':'url(#tm-tra)'}));
+    }
+    g.addEventListener('click',()=>{activeBnd=i;buildTect();renderTect();});
+    tsvg.appendChild(g);
+  });
+}
+function renderTect(){
+  const b=BOUNDS[activeBnd];
+  const cls=b.t==='div'?'bt-div':b.t==='con'?'bt-con':'bt-tra';
+  const motion=b.t==='div'?'Plates moving APART → new crust forms':b.t==='con'?'Plates moving TOGETHER → crust destroyed / mountains rise':'Plates sliding PAST each other → earthquakes';
+  document.getElementById('tectInfo').innerHTML=`
+    <span class="bType ${cls}">${TYPENAME[b.t]}</span>
+    <h3>${b.name}</h3>
+    <div style="color:${COL[b.t]};font-size:13px;font-weight:600;margin:2px 0 8px">${motion}</div>
+    <p style="color:var(--muted);margin:0">${b.info}</p>`;
+}
+document.querySelectorAll('#tFilters button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    tFilter=btn.dataset.f;
+    document.querySelectorAll('#tFilters button').forEach(x=>x.classList.toggle('on',x===btn));
+    // keep active boundary visible if it matches filter, else jump to first matching
+    if(tFilter!=='all'&&BOUNDS[activeBnd].t!==tFilter){const fi=BOUNDS.findIndex(b=>b.t===tFilter);if(fi>=0)activeBnd=fi;}
+    buildTect();renderTect();
+  });
+});
+buildTect();renderTect();
+
+/* ============================================================
+   SECTION 12 — comprehensive mineral table
+============================================================ */
+// abund = approx % of Earth's CRUST by volume (for the bar); abundText = label
+const MTAB=[
+  {m:"Plagioclase feldspar",c:"#cdd7e0",comp:"(Ca,Na)(Al,Si)₄O₈",use:"Ceramics, glass, filler",abund:39,abundText:"~39% (most abundant)",form:"Crystallizes from cooling magma; continuous solid solution",rocks:"Basalt, gabbro, andesite, diorite"},
+  {m:"Alkali feldspar",c:"#e9c4aa",comp:"(K,Na)AlSi₃O₈",use:"Ceramics, glass, scouring powders",abund:12,abundText:"~12%",form:"Late crystallization in felsic magma; can exsolve to perthite",rocks:"Granite, rhyolite, syenite"},
+  {m:"Quartz",c:"#dfe7f0",comp:"SiO₂",use:"Glass, silicon chips, abrasives",abund:12,abundText:"~12%",form:"Last to crystallize from silica-rich magma; also hydrothermal & detrital",rocks:"Granite, rhyolite, sandstone, quartzite"},
+  {m:"Pyroxene",c:"#7fb98f",comp:"(Mg,Fe,Ca)₂Si₂O₆",use:"Minor; jadeite (jade) as a gem",abund:11,abundText:"~11%",form:"Early–mid crystallization from mafic magma; Mg⇄Fe solid solution",rocks:"Basalt, gabbro, peridotite"},
+  {m:"Amphibole",c:"#6f9f7a",comp:"Ca₂(Mg,Fe)₅Si₈O₂₂(OH)₂",use:"Historically asbestos (now restricted)",abund:5,abundText:"~5%",form:"Crystallizes from wet, cooler magmas; needs water (OH)",rocks:"Andesite, diorite, amphibolite"},
+  {m:"Mica (biotite/muscovite)",c:"#8a7a5c",comp:"K(Mg,Fe,Al)₂₋₃(AlSi₃O₁₀)(OH)₂",use:"Insulators, cosmetics, drywall filler",abund:5,abundText:"~5%",form:"Crystallizes late in magma & grows during metamorphism",rocks:"Granite, schist, gneiss"},
+  {m:"Olivine",c:"#6fd0c0",comp:"(Mg,Fe)₂SiO₄",use:"Refractory sand, peridot gemstone",abund:3,abundText:"~3% crust (dominant in mantle)",form:"First to crystallize from hot magma; Mg⇄Fe solid solution",rocks:"Peridotite, dunite, basalt"},
+  {m:"Clay minerals",c:"#b9a07e",comp:"e.g. Al₂Si₂O₅(OH)₄ (kaolinite)",use:"Bricks, ceramics, paper, drilling mud",abund:5,abundText:"~5%",form:"Chemical weathering of feldspars & other silicates at the surface",rocks:"Shale, mudstone, soils"},
+  {m:"Calcite",c:"#e8eaee",comp:"CaCO₃",use:"Cement, lime, building stone",abund:2,abundText:"~2%",form:"Precipitates from seawater & from shells; recrystallizes in metamorphism",rocks:"Limestone, marble, chalk"},
+  {m:"Garnet",c:"#e0506a",comp:"X₃Y₂(SiO₄)₃",use:"Abrasives, waterjet cutting, gemstone",abund:1,abundText:"~1%",form:"Grows under metamorphic heat & pressure; some igneous",rocks:"Schist, gneiss, eclogite"},
+  {m:"Magnetite",c:"#555a63",comp:"Fe₃O₄",use:"Iron ore, magnetic recording media",abund:1,abundText:"<2% (major iron ore)",form:"Crystallizes from magma; concentrates in banded iron formations",rocks:"Basalt, gabbro, BIF, placer sands"},
+  {m:"Hematite",c:"#9e4a3a",comp:"Fe₂O₃",use:"Iron ore, red pigment, polishing",abund:1,abundText:"<2% (major iron ore)",form:"Oxidation/precipitation in water; weathering of iron minerals",rocks:"Banded iron formation, sandstone cement"},
+  {m:"Gypsum",c:"#eef1f4",comp:"CaSO₄·2H₂O",use:"Drywall, plaster, cement retarder",abund:1,abundText:"<1% (evaporite)",form:"Precipitates as salty water evaporates (evaporite)",rocks:"Rock gypsum, evaporite beds"},
+  {m:"Halite",c:"#f0eef2",comp:"NaCl",use:"Table salt, de-icing, chemical feedstock",abund:1,abundText:"<1% (evaporite)",form:"Precipitates when seawater fully evaporates",rocks:"Rock salt, evaporite beds"},
+  {m:"Dolomite",c:"#d8cfc0",comp:"CaMg(CO₃)₂",use:"Cement, flux, magnesium source",abund:1,abundText:"~1%",form:"Alteration of limestone by Mg-rich fluids; some direct precipitation",rocks:"Dolostone, marble"},
+  {m:"Apatite",c:"#9ad0c0",comp:"Ca₅(PO₄)₃(F,Cl,OH)",use:"Phosphate fertilizer, source of P",abund:1,abundText:"<1% (accessory)",form:"Accessory in igneous rocks; concentrates in sedimentary phosphorite",rocks:"Granite (accessory), phosphorite"},
+  {m:"Kyanite/Sillimanite",c:"#9bb8d8",comp:"Al₂SiO₅",use:"Refractory ceramics, spark plugs",abund:1,abundText:"<1%",form:"Grows during metamorphism of aluminous (clay-rich) rocks; index minerals",rocks:"Schist, gneiss"},
+  // ---- main ore & economic minerals ----
+  {m:"Bauxite (gibbsite)",c:"#c98a5a",comp:"Al(OH)₃ + Fe oxides",use:"The ore of ALUMINIUM",abund:1,abundText:"<1% (ore deposit)",form:"Intense tropical weathering (laterite) that leaches everything but aluminium",rocks:"Laterite, residual soils"},
+  {m:"Native gold",c:"#ffd25a",comp:"Au",use:"The ore of GOLD — jewelry, electronics, reserves",abund:1,abundText:"trace (~ppb)",form:"Precipitates from hot hydrothermal fluids in veins; concentrated in placers",rocks:"Quartz veins, placer gravels"},
+  {m:"Native silver / Argentite",c:"#d6dde4",comp:"Ag / Ag₂S",use:"The ore of SILVER — coinage, electronics, photography",abund:1,abundText:"trace",form:"Hydrothermal veins, often with lead/zinc ores",rocks:"Hydrothermal veins"},
+  {m:"Chalcopyrite",c:"#d4a93a",comp:"CuFeS₂",use:"The main ore of COPPER",abund:1,abundText:"trace (chief Cu ore)",form:"Crystallizes from hydrothermal & magmatic sulfide fluids",rocks:"Porphyry copper deposits, veins"},
+  {m:"Bornite / Chalcocite",c:"#9a6acb",comp:"Cu₅FeS₄ / Cu₂S",use:"High-grade COPPER ore",abund:1,abundText:"trace",form:"Hydrothermal enrichment of copper sulfides",rocks:"Porphyry & sediment-hosted Cu"},
+  {m:"Galena",c:"#8c9098",comp:"PbS",use:"The ore of LEAD (+ silver by-product)",abund:1,abundText:"trace",form:"Low-temperature hydrothermal veins & carbonate replacement",rocks:"Limestone-hosted veins (MVT)"},
+  {m:"Sphalerite",c:"#b08a5a",comp:"(Zn,Fe)S",use:"The main ore of ZINC",abund:1,abundText:"trace",form:"Hydrothermal veins, often alongside galena",rocks:"Carbonate & vein deposits"},
+  {m:"Cassiterite",c:"#5a4636",comp:"SnO₂",use:"The ore of TIN",abund:1,abundText:"trace",form:"Crystallizes from granite-related fluids; survives in placers",rocks:"Granite, pegmatite, placers"},
+  {m:"Cinnabar",c:"#c0392b",comp:"HgS",use:"The ore of MERCURY; red pigment (vermilion)",abund:1,abundText:"trace",form:"Deposited by low-temperature volcanic/hot-spring fluids",rocks:"Volcanic & hot-spring deposits"},
+  {m:"Chromite",c:"#3a3a42",comp:"FeCr₂O₄",use:"The only ore of CHROMIUM (stainless steel)",abund:1,abundText:"trace",form:"Settles out early from cooling mafic magma (layered intrusions)",rocks:"Peridotite, layered gabbro"},
+  {m:"Pyrite",c:"#e0c24a",comp:"FeS₂",use:"Sulfur source; 'fool's gold'; minor",abund:1,abundText:"common accessory",form:"Forms in many settings — hydrothermal, sedimentary, magmatic",rocks:"Shale, coal, veins"},
+  {m:"Bornite-free Ilmenite",c:"#4a4450",comp:"FeTiO₃",use:"The ore of TITANIUM (pigment, alloys)",abund:1,abundText:"trace",form:"Crystallizes from mafic magma; concentrates in beach placers",rocks:"Gabbro, anorthosite, placer sands"},
+  {m:"Rutile",c:"#9e5a3a",comp:"TiO₂",use:"TITANIUM ore; brilliant white pigment",abund:1,abundText:"trace (accessory)",form:"Accessory in igneous & metamorphic rocks; durable in placers",rocks:"Gneiss, eclogite, beach sands"},
+  {m:"Uraninite",c:"#3a5a3a",comp:"UO₂",use:"The ore of URANIUM (nuclear fuel)",abund:1,abundText:"trace",form:"Hydrothermal & sedimentary; high-grade unconformity deposits",rocks:"Granite, pegmatite, sandstone"},
+  {m:"Wolframite/Scheelite",c:"#6b5a3a",comp:"(Fe,Mn)WO₄ / CaWO₄",use:"The ore of TUNGSTEN (carbide tools)",abund:1,abundText:"trace",form:"Granite-related veins (greisen) & skarns",rocks:"Granite veins, skarn"},
+  {m:"Pentlandite",c:"#caa15a",comp:"(Fe,Ni)₉S₈",use:"The main ore of NICKEL",abund:1,abundText:"trace",form:"Segregates from sulfide-rich mafic magma",rocks:"Mafic/ultramafic intrusions"},
+  {m:"Bastnäsite/Monazite",c:"#b8a060",comp:"(Ce,La)CO₃F / (Ce,La)PO₄",use:"Ores of RARE-EARTH elements (magnets)",abund:1,abundText:"trace",form:"Carbonatites & alkaline igneous rocks; placer monazite",rocks:"Carbonatite, placer sands"},
+  {m:"Fluorite",c:"#8a7adf",comp:"CaF₂",use:"Flux in steelmaking; HF acid; optics",abund:1,abundText:"<1%",form:"Low-temperature hydrothermal veins",rocks:"Veins, limestone replacement"},
+  {m:"Barite",c:"#d8d2c8",comp:"BaSO₄",use:"Drilling mud weight; barium source",abund:1,abundText:"<1%",form:"Hydrothermal & sedimentary precipitation",rocks:"Veins, bedded deposits"},
+  {m:"Graphite",c:"#3a3a3a",comp:"C",use:"Batteries, lubricant, pencils, electrodes",abund:1,abundText:"trace",form:"Metamorphism of carbon-rich (organic) sediments",rocks:"Marble, schist, gneiss"},
+  {m:"Talc",c:"#dfe7df",comp:"Mg₃Si₄O₁₀(OH)₂",use:"Talcum powder, paint, plastics filler",abund:1,abundText:"<1%",form:"Alteration of magnesium-rich rocks by hydrothermal fluids",rocks:"Soapstone, altered peridotite"},
+  {m:"Diamond (industrial)",c:"#cfe8f4",comp:"C",use:"Cutting, grinding & drilling abrasives",abund:1,abundText:"trace",form:"Extreme pressure deep in the mantle; rises in kimberlite",rocks:"Kimberlite, placer gravels"}
+];
+const MCOLS=[
+  {k:"m",label:"Mineral"},
+  {k:"comp",label:"Chemical composition"},
+  {k:"use",label:"Main industry use"},
+  {k:"abund",label:"Abundance (crust)"},
+  {k:"form",label:"How it forms"},
+  {k:"rocks",label:"Rocks it composes"}
+];
+let mSort={k:null,dir:1}, mQuery='';
+const mHead=document.getElementById('mtabHead');
+MCOLS.forEach(col=>{
+  const th=document.createElement('th');th.dataset.k=col.k;
+  th.innerHTML=col.label+' <span class="ar">▲▼</span>';
+  th.addEventListener('click',()=>{
+    if(mSort.k===col.k)mSort.dir*=-1;else{mSort.k=col.k;mSort.dir=1;}
+    renderMtab();
+  });
+  mHead.appendChild(th);
+});
+function mCell(col,row){
+  if(col==='m')return `<div class="mname"><span class="dot" style="background:${row.c}"></span>${row.m}</div>`;
+  if(col==='comp')return `<span class="f">${row.comp}</span>`;
+  if(col==='abund')return `<span class="abund"><span class="barwrap"><span class="barfill" style="width:${Math.min(100,row.abund*2.4)}%"></span></span>${row.abundText}</span>`;
+  return row[col];
+}
+function renderMtab(){
+  let rows=MTAB.slice();
+  if(mQuery){
+    const q=mQuery.toLowerCase();
+    rows=rows.filter(r=>[r.m,r.comp,r.use,r.abundText,r.form,r.rocks].join(' ').toLowerCase().includes(q));
+  }
+  if(mSort.k){
+    rows.sort((a,b)=>{
+      let x=a[mSort.k],y=b[mSort.k];
+      if(mSort.k==='abund'){return (x-y)*mSort.dir;}
+      return String(x).localeCompare(String(y))*mSort.dir;
+    });
+  }
+  document.getElementById('mtabBody').innerHTML=rows.map(r=>
+    `<tr>${MCOLS.map(c=>`<td>${mCell(c.k,r)}</td>`).join('')}</tr>`).join('')
+    || `<tr><td colspan="${MCOLS.length}" style="text-align:center;padding:24px;color:var(--dim)">No minerals match “${mQuery}”.</td></tr>`;
+  document.getElementById('mtabCount').textContent=`${rows.length} of ${MTAB.length} minerals`;
+  [...mHead.children].forEach(th=>th.classList.toggle('sorted',th.dataset.k===mSort.k));
+  applyGlossary(document.getElementById('mtabBody'));
+}
+document.getElementById('mtabSearch').addEventListener('input',e=>{mQuery=e.target.value;renderMtab();});
+renderMtab();
+
+/* ============================================================
+   NAV scroll-spy
+============================================================ */
+const links=[...document.querySelectorAll('nav.toc a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+function spy(){
+  let idx=0;const y=window.scrollY+120;
+  secs.forEach((s,i)=>{if(s&&s.offsetTop<=y)idx=i;});
+  links.forEach((a,i)=>a.classList.toggle('active',i===idx));
+}
+window.addEventListener('scroll',spy);spy();
+</script>
+</body>
+</html>
