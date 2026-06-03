@@ -5,7 +5,7 @@ minerals, rocks, and the geological processes that make them. Everything runs in
 the browser — no install, no server, no dependencies.
 
 **▶ Live site:** _add your GitHub Pages link here once published_
-(e.g. `https://YOUR-USERNAME.github.io/geology-chapter/`)
+(e.g. `https://felipegutierrez-gif.github.io/Geology-intro/`)
 
 ---
 
